@@ -84,6 +84,10 @@ tr.clickable{cursor:pointer}
 tr.clickable:hover td{background:#f0f5ff}
 tr.row-pending td{background:#fffbf0}
 tr.row-pending:hover td{background:#fff5d6}
+tr.row-overdue td{background:#fff0f0}
+tr.row-overdue:hover td{background:#ffe0e0}
+tr.row-urgent td{background:#fff8ee}
+tr.row-urgent:hover td{background:#ffefd4}
 
 .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
 .tag-AML-CTF{background:#e6f9f6;color:#0f5f5f}.tag-Compliance{background:#e8f4fd;color:#1a4a8a}
@@ -705,10 +709,16 @@ function renderTable() {
 
   document.getElementById('tableBody').innerHTML = slice.map(r => {
     const isPending = !(r.completed || '');
+    const isYes     = (r.completed||'').toLowerCase() === 'yes';
+    const dc        = dateClass(r.reviewDate);
+    const rowCls    = isPending ? ' row-pending'
+                    : isYes && dc === 'date-overdue' ? ' row-overdue'
+                    : isYes && dc === 'date-urgent'  ? ' row-urgent'
+                    : '';
     const enc = encodeURIComponent(JSON.stringify(r));
     const sTag = 'tag-' + (r.section||'').replace(/[\s\/]/g,'-').replace(/[()]/g,'');
     const fTag = 'freq-' + (r.frequency||'').split(' ')[0];
-    return '<tr class="clickable' + (isPending ? ' row-pending' : '') + '" onclick="openEdit(\'' + enc + '\')">'
+    return '<tr class="clickable' + rowCls + '" onclick="openEdit(\'' + enc + '\')">'
       + '<td style="font-weight:700;color:var(--muted);white-space:nowrap">' + (r.taskNo||'—') + '</td>'
       + '<td><span class="tag ' + sTag + '">' + (r.section||'—') + '</span></td>'
       + '<td>' + (r.obligation||'—') + '</td>'
