@@ -414,12 +414,9 @@ async function getToken() {
 
   const accounts = msalInstance.getAllAccounts();
   if (accounts.length === 0) {
-    // No session — pop a login window
-    const r = await msalInstance.loginPopup({ scopes: SP_SCOPES() });
-    currentAccount = r.account;
-    updateUserUI();
-    _tokenCache = { token: r.accessToken, expiry: Date.now() + 55 * 60 * 1000 };
-    return r.accessToken;
+    // No session — redirect to Microsoft login (page navigates away, returns via handleRedirectPromise)
+    await msalInstance.loginRedirect({ scopes: SP_SCOPES() });
+    return; // unreachable — page navigates away
   }
 
   currentAccount = accounts[0];
@@ -428,9 +425,8 @@ async function getToken() {
     _tokenCache = { token: r.accessToken, expiry: Date.now() + 55 * 60 * 1000 };
     return r.accessToken;
   } catch {
-    const r = await msalInstance.acquireTokenPopup({ scopes: SP_SCOPES() });
-    _tokenCache = { token: r.accessToken, expiry: Date.now() + 55 * 60 * 1000 };
-    return r.accessToken;
+    // Silent failed — redirect for fresh token
+    await msalInstance.acquireTokenRedirect({ scopes: SP_SCOPES(), account: currentAccount });
   }
 }
 
@@ -443,15 +439,13 @@ function updateUserUI() {
 
 async function signIn() {
   try {
-    const r = await msalInstance.loginPopup({ scopes: SP_SCOPES() });
-    currentAccount = r.account;
-    updateUserUI();
-    loadData();
+    await msalInstance.loginRedirect({ scopes: SP_SCOPES() });
+    // Page navigates away — result handled by handleRedirectPromise on return
   } catch (e) { toast('error', 'Sign-in failed: ' + e.message); }
 }
 
 function signOut() {
-  msalInstance.logoutPopup({ account: currentAccount });
+  msalInstance.logoutRedirect({ account: currentAccount });
   currentAccount = null;
   _tokenCache = { token: null, expiry: 0 };
   updateUserUI();
