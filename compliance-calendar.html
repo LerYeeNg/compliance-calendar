@@ -513,11 +513,20 @@ async function loadData() {
       "/items?$top=5000&$orderby=Id"
     );
 
-    // Show first item's keys in debug panel so we can identify any renamed columns
-    if (data.value.length > 0) {
-      const keys = Object.keys(data.value[0]).filter(k => !k.startsWith('odata')).sort().join(', ');
-      const dbg = document.getElementById('debugPanel');
-      if (dbg) dbg.innerHTML += '<br><strong style="color:#ce9178">SP fields returned:</strong> <code style="font-size:10px">' + keys + '</code>';
+    // Fetch field definitions so we can see the real internal names
+    const fieldsResp = await spGet(
+      "/web/lists/getbytitle('" + encodeURIComponent(CONFIG.listName) + "')" +
+      "/fields?$filter=Hidden eq false&$select=Title,InternalName,EntityPropertyName&$top=100"
+    );
+    const dbg = document.getElementById('debugPanel');
+    if (dbg) {
+      const rows = fieldsResp.value
+        .filter(f => !['ContentType','Attachments','Edit','LinkTitleNoMenu','LinkTitle','DocIcon',
+                       'ItemChildCount','FolderChildCount','AppAuthor','AppEditor'].includes(f.InternalName)
+                  && !f.InternalName.startsWith('_'))
+        .map(f => '"' + f.Title + '" → <b>' + (f.EntityPropertyName || f.InternalName) + '</b>')
+        .join(' &nbsp;|&nbsp; ');
+      dbg.innerHTML += '<br><strong style="color:#4ec9b0">Field map:</strong> <span style="font-size:10px">' + rows + '</span>';
     }
 
     allItems = data.value.map(item => ({
