@@ -382,9 +382,8 @@ function spRoot() {
   return u.origin;                   // e.g. https://netorgft13870443.sharepoint.com
 }
 
-// Scopes: Sites.ReadWrite.All via Microsoft Graph
-const SP_SCOPES = () => ['https://graph.microsoft.com/Sites.ReadWrite.All'];
-const GRAPH     = 'https://graph.microsoft.com/v1.0';
+// Scopes: AllSites.Write on the SharePoint resource (user-consentable, no admin needed)
+const SP_SCOPES = () => [spRoot() + '/AllSites.Write'];
 
 function initMsal() {
   if (!CONFIG.clientId || CONFIG.clientId === 'YOUR_CLIENT_ID') return;
@@ -458,38 +457,48 @@ function signOut() {
   updateUserUI();
 }
 
-// ── MICROSOFT GRAPH API ───────────────────────────────
-let _siteId = null;
+// ── SHAREPOINT REST API ───────────────────────────────
+function apiBase() { return CONFIG.siteUrl.replace(/\/$/, '') + '/_api'; }
 
-// Resolve the Graph site ID once and cache it
-async function getSiteId() {
-  if (_siteId) return _siteId;
+async function spGet(path) {
   const token = await getToken();
-  const u = new URL(CONFIG.siteUrl);
-  const r = await fetch(GRAPH + '/sites/' + u.hostname + ':' + u.pathname, {
-    headers: { Authorization: 'Bearer ' + token },
-  });
-  if (!r.ok) throw new Error('Cannot resolve site (' + r.status + ')');
-  _siteId = (await r.json()).id;
-  return _siteId;
-}
-
-async function graphGet(url) {
-  const token = await getToken();
-  const r = await fetch(url, {
-    headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+  const r = await fetch(apiBase() + path, {
+    headers: { Accept: 'application/json;odata=nometadata', Authorization: 'Bearer ' + token },
   });
   if (!r.ok) throw new Error('SharePoint ' + r.status + ' ' + r.statusText);
   return r.json();
 }
 
-async function graphPatch(url, body) {
+let _digest = null, _digestExpiry = 0;
+async function getDigest() {
+  if (_digest && Date.now() < _digestExpiry) return _digest;
   const token = await getToken();
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+  const r = await fetch(apiBase() + '/contextinfo', {
+    method: 'POST',
+    headers: { Accept: 'application/json;odata=nometadata', Authorization: 'Bearer ' + token },
   });
+  if (!r.ok) throw new Error('Could not get form digest (' + r.status + ')');
+  const d = await r.json();
+  _digest = d.FormDigestValue;
+  _digestExpiry = Date.now() + (d.FormDigestTimeoutSeconds - 60) * 1000;
+  return _digest;
+}
+
+async function spPatch(itemId, fields) {
+  const token  = await getToken();
+  const digest = await getDigest();
+  const r = await fetch(
+    apiBase() + "/web/lists/getbytitle('" + encodeURIComponent(CONFIG.listName) + "')/items(" + itemId + ")",
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json;odata=nometadata', 'Content-Type': 'application/json;odata=nometadata',
+        'X-RequestDigest': digest, 'X-HTTP-Method': 'MERGE', 'IF-MATCH': '*',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify(fields),
+    }
+  );
   if (!r.ok) throw new Error('Save failed (' + r.status + ') – ' + (await r.text()));
 }
 
@@ -500,38 +509,27 @@ async function loadData() {
   setConnBar('warn', 'Connecting to SharePoint…');
 
   try {
-    const sid = await getSiteId();
     const f   = CONFIG.fields;
-    const sel = Object.values(f).join(',');
+    const sel = Object.values(f).join(',') + ',Id';
+    const data = await spGet(
+      "/web/lists/getbytitle('" + encodeURIComponent(CONFIG.listName) + "')" +
+      "/items?$select=" + sel + "&$top=5000&$orderby=Id"
+    );
 
-    // Fetch all pages (Graph max is 999 per page)
-    let rows = [];
-    let nextUrl = GRAPH + '/sites/' + sid + '/lists/' + encodeURIComponent(CONFIG.listName)
-      + '/items?expand=fields($select=' + sel + ')&$top=999';
-
-    while (nextUrl) {
-      const data = await graphGet(nextUrl);
-      rows = rows.concat(data.value);
-      nextUrl = data['@odata.nextLink'] || null;
-    }
-
-    allItems = rows.map(item => {
-      const fld = item.fields || {};
-      return {
-        _id:            item.id,                      // Graph item ID (string)
-        taskNo:         fld[f.taskNo]         || '',
-        entity:         fld[f.entity]         || '',
-        section:        fld[f.section]        || '',
-        obligation:     fld[f.obligation]     || '',
-        reference:      fld[f.reference]      || '',
-        officer:        fld[f.officer]        || '',
-        frequency:      fld[f.frequency]      || '',
-        completed:      fld[f.completed]      || '',
-        completionDate: spDate(fld[f.completionDate]),
-        reviewDate:     spDate(fld[f.reviewDate]),
-        comments:       fld[f.comments]       || '',
-      };
-    });
+    allItems = data.value.map(item => ({
+      _id:            item.Id,
+      taskNo:         item[f.taskNo]         || '',
+      entity:         item[f.entity]         || '',
+      section:        item[f.section]        || '',
+      obligation:     item[f.obligation]     || '',
+      reference:      item[f.reference]      || '',
+      officer:        item[f.officer]        || '',
+      frequency:      item[f.frequency]      || '',
+      completed:      item[f.completed]      || '',
+      completionDate: spDate(item[f.completionDate]),
+      reviewDate:     spDate(item[f.reviewDate]),
+      comments:       item[f.comments]       || '',
+    }));
 
     setConnBar('ok',
       'Connected &middot; <strong>' + CONFIG.listName + '</strong> &middot; ' +
@@ -602,17 +600,13 @@ async function saveItem() {
   btn.disabled = true; ind.classList.remove('hidden');
 
   try {
-    const sid = await getSiteId();
-    await graphPatch(
-      GRAPH + '/sites/' + sid + '/lists/' + encodeURIComponent(CONFIG.listName) + '/items/' + editingItem._id + '/fields',
-      {
-        [f.completed]:      completedVal  || null,
-        [f.officer]:        officerVal    || null,
-        [f.completionDate]: compDateVal   ? compDateVal  + 'T00:00:00Z' : null,
-        [f.reviewDate]:     reviewDateVal ? reviewDateVal + 'T00:00:00Z' : null,
-        [f.comments]:       commentsVal   || null,
-      }
-    );
+    await spPatch(editingItem._id, {
+      [f.completed]:      completedVal  || null,
+      [f.officer]:        officerVal    || null,
+      [f.completionDate]: compDateVal   ? compDateVal  + 'T00:00:00Z' : null,
+      [f.reviewDate]:     reviewDateVal ? reviewDateVal + 'T00:00:00Z' : null,
+      [f.comments]:       commentsVal   || null,
+    });
     toast('success', 'Task #' + editingItem.taskNo + ' saved to SharePoint ✓');
     closeModal(); applyFilters();
   } catch (e) {
