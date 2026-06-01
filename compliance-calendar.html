@@ -103,7 +103,7 @@ tr.row-pending:hover td{background:#fff5d6}
 .freq-Biannually{background:#ffe0f0;color:#8a0a5a}.freq-Every{background:#fff0e0;color:#8a4a00}
 
 .status-yes{color:var(--green);font-weight:700}.status-na{color:var(--muted)}.status-pending{color:var(--amber);font-weight:700}
-.date-urgent{color:var(--red);font-weight:700}.date-soon{color:var(--amber);font-weight:700}.date-ok{color:var(--green)}
+.date-overdue{color:var(--red);font-weight:700}.date-urgent{color:var(--amber);font-weight:700}.date-soon{color:var(--muted)}.date-ok{color:var(--muted)}
 
 .pager{display:flex;align-items:center;gap:6px;padding:10px 16px;border-top:1px solid var(--border);justify-content:flex-end;flex-wrap:wrap}
 .pager button{border:1px solid var(--border);background:var(--card);border-radius:5px;padding:4px 10px;cursor:pointer;font-size:12px}
@@ -751,7 +751,7 @@ function pd(s) {
 // SharePoint returns dates as "2026-07-15T00:00:00Z" – trim to YYYY-MM-DD
 function spDate(v) { return v ? v.substring(0, 10) : ''; }
 function fmtDate(s) { const d=pd(s); return d&&!isNaN(d)?d.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'}):'—'; }
-function dateClass(s) { const d=pd(s); if(!d) return ''; const diff=(d-new Date())/86400000; return diff<0?'date-ok':diff<=30?'date-urgent':diff<=90?'date-soon':'date-ok'; }
+function dateClass(s) { const d=pd(s); if(!d) return ''; const diff=(d-new Date())/86400000; return diff<0?'date-overdue':diff<=14?'date-urgent':'date-ok'; }
 function statusHTML(s) { if(!s) return '<span class="status-pending">—</span>'; if(s.toLowerCase()==='yes') return '<span class="status-yes">&#10003; Yes</span>'; if(s.toLowerCase()==='n/a') return '<span class="status-na">N/A</span>'; return '<span class="status-pending">'+s+'</span>'; }
 function setConnBar(type, msg) { document.getElementById('connBar').className='conn-bar '+type; document.getElementById('connMsg').innerHTML=msg; }
 function toast(type, msg, ms=4500) {
@@ -775,6 +775,18 @@ const NEWS_ICONS = {
   aer:     '<svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
 };
 
+// Extract the earliest date mentioned in an item title, e.g. "31 Oct 2026", "1 Jul 2026"
+const MONTHS_MAP = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function extractItemDate(title) {
+  // Match patterns like "31 Oct 2026", "1 Jul 2026", "Dec 2026", "Aug/Sep 2026"
+  const m = title.match(/(\d{1,2})?\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\/?\s*(?:\w+\s+)?(\d{4})/i);
+  if (!m) return null;
+  const day = parseInt(m[1]) || 1;
+  const mon = MONTHS_MAP[m[2].toLowerCase().slice(0,3)];
+  const yr  = parseInt(m[3]);
+  return new Date(yr, mon, day);
+}
+
 async function loadNews() {
   const panel = document.getElementById('watchPanel');
   try {
@@ -792,12 +804,33 @@ async function loadNews() {
     const total = (news.sections || []).reduce((n, s) => n + (s.items || []).length, 0);
     document.getElementById('s-watch').textContent = total;
 
+    const today = new Date(); today.setHours(0,0,0,0);
+
     // Render cards
     panel.innerHTML = (news.sections || []).map(sec => {
       const icon = NEWS_ICONS[sec.id] || NEWS_ICONS.afsl;
-      const items = (sec.items || []).map(it =>
-        `<div class="watch-item"><div class="wi-title"><span class="badge ${it.badge}">${it.badge.charAt(0).toUpperCase()+it.badge.slice(1)}</span>${escHtml(it.title)}</div><div class="wi-desc">${escHtml(it.desc)}</div></div>`
-      ).join('');
+
+      // Sort items by extracted date (earliest first; undated items go last)
+      const sorted = [...(sec.items || [])].sort((a, b) => {
+        const da = extractItemDate(a.title), db = extractItemDate(b.title);
+        if (da && db) return da - db;
+        if (da) return -1;
+        if (db) return 1;
+        return 0;
+      });
+
+      const items = sorted.map(it => {
+        // Colour the item row if its date is overdue or within 14 days
+        const d = extractItemDate(it.title);
+        let rowStyle = '';
+        if (d) {
+          const diff = (d - today) / 86400000;
+          if (diff < 0)       rowStyle = 'border-left:3px solid var(--red);padding-left:8px';
+          else if (diff <= 14) rowStyle = 'border-left:3px solid var(--amber);padding-left:8px';
+        }
+        return `<div class="watch-item" style="${rowStyle}"><div class="wi-title"><span class="badge ${it.badge}">${it.badge.charAt(0).toUpperCase()+it.badge.slice(1)}</span>${escHtml(it.title)}</div><div class="wi-desc">${escHtml(it.desc)}</div></div>`;
+      }).join('');
+
       return `<div class="watch-card ${sec.id}"><div class="wc-header">${icon} ${escHtml(sec.title)}</div><div class="wc-body">${items}</div></div>`;
     }).join('');
   } catch (e) {
