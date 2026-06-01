@@ -69,11 +69,12 @@ Return a JSON object in exactly this structure (keep section ids as "afsl", "aus
 Rules:
 - Each section should have 3–5 items.
 - Focus on obligations or deadlines that fall within the next 6 months OR are newly in force.
+- IMPORTANT: Also retain any items from the previous list whose deadline fell within the past 30 days — these are recent enough that the compliance team may not have confirmed completion yet. Keep them with their original badge so they stay visible as a reminder.
 - badge values: "new" = newly introduced, "deadline" = hard deadline coming up, "change" = rule changed/tightened, "watch" = emerging/monitor.
 - Be concise — titles ≤ 80 chars, desc ≤ 200 chars.
 - Output ONLY the raw JSON object. No markdown. No explanation.
 
-Previously shown items (for context — avoid exact repeats if they are now stale):
+Previously shown items (carry forward any with deadlines in the past 30 days):
 {json.dumps(existing, indent=2)}
 """
 
@@ -81,7 +82,7 @@ Previously shown items (for context — avoid exact repeats if they are now stal
 
     print("Calling Claude API…")
     message = client.messages.create(
-        model='claude-opus-4-5',
+        model='claude-sonnet-4-5',
         max_tokens=2048,
         system=system_prompt,
         messages=[{'role': 'user', 'content': user_prompt}],

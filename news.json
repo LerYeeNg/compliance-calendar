@@ -37,6 +37,11 @@
       "title": "AUSTRAC – AML/CTF Reforms",
       "items": [
         {
+          "badge": "new",
+          "title": "AML/CTF Compliance Officer Notification – Due 30 May 2026",
+          "desc": "Existing reporting entities must notify AUSTRAC of their AML/CTF Compliance Officer by 30 May 2026. Confirm notification is lodged and records are current."
+        },
+        {
           "badge": "deadline",
           "title": "Tranche 2 Enrolment – Deadline 29 Jul 2026",
           "desc": "Lawyers, accountants, real estate agents newly regulated from 1 Jul 2026. Update counterparty CDD procedures if dealing with these sectors. (s51B AML/CTF Act)"
