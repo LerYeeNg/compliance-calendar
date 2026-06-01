@@ -187,7 +187,7 @@ tr.row-urgent:hover td{background:#ffefd4}
     <div class="card green"><div class="num" id="s-completed">–</div><div class="lbl">Completed</div></div>
     <div class="card amber"><div class="num" id="s-pending">–</div><div class="lbl">Pending</div></div>
     <div class="card red"><div class="num" id="s-watch">–</div><div class="lbl">New Obligations to Watch</div></div>
-    <div class="card purple"><div class="num" id="s-due">–</div><div class="lbl">Due This Quarter (Jul–Sep)</div></div>
+    <div class="card purple"><div class="num" id="s-due">–</div><div class="lbl" id="s-due-lbl">Due Next Quarter</div></div>
   </div>
 
   <div class="section-title">New Obligations to Watch <span id="news-updated" style="font-size:11px;font-weight:400;opacity:.6;margin-left:8px"></span></div>
@@ -689,8 +689,16 @@ function renderFromData(data) {
   document.getElementById('s-total').textContent     = data.length;
   document.getElementById('s-completed').textContent = data.filter(r => (r.completed||'').toLowerCase() === 'yes').length;
   document.getElementById('s-pending').textContent   = data.filter(r => !(r.completed||'')).length;
+  // Next quarter: always calculated from today
+  const _nqStart = new Date(); _nqStart.setDate(1);
+  _nqStart.setMonth(Math.floor((_nqStart.getMonth() / 3) + 1) * 3);  // first month of next quarter
+  _nqStart.setHours(0,0,0,0);
+  const _nqEnd = new Date(_nqStart); _nqEnd.setMonth(_nqEnd.getMonth() + 3);
+  const _QNAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('s-due-lbl').textContent =
+    'Due Next Quarter (' + _QNAMES[_nqStart.getMonth()] + '–' + _QNAMES[_nqEnd.getMonth() - 1] + ')';
   document.getElementById('s-due').textContent = data.filter(r => {
-    const d = pd(r.reviewDate); return d && d.getMonth() >= 6 && d.getMonth() <= 8;
+    const d = pd(r.reviewDate); return d && d >= _nqStart && d < _nqEnd;
   }).length;
   for (let m = 0; m < 12; m++) {
     document.getElementById('mc' + m).textContent = data.filter(r => {
