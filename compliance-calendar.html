@@ -809,8 +809,19 @@ document.getElementById('currentDate').textContent =
 // Initialise MSAL (reads clientId/tenantId from config.js)
 initMsal();
 
-// Auto-load on page open – MSAL will pop a login window if needed
-loadData();
+// If already signed in → load data straight away.
+// If not signed in → show a prompt; wait for the user to click Sign In.
+// (Do NOT auto-popup on load — that triggers block_nested_popups in the redirect page.)
+if (msalInstance && msalInstance.getAllAccounts().length > 0) {
+  loadData();
+} else if (!msalInstance) {
+  // Azure AD not yet configured — load fallback so the page isn't blank
+  loadData();
+} else {
+  setConnBar('warn', 'Click <strong>Sign In</strong> (top right) to connect to SharePoint.');
+  populateSectionFilter(FALLBACK_DATA);
+  renderFromData(FALLBACK_DATA);
+}
 
 // ── FALLBACK DATA (shown when SharePoint is unreachable or siteUrl not yet set) ──
 const FALLBACK_DATA = [
