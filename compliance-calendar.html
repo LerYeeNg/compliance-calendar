@@ -182,47 +182,13 @@ tr.row-pending:hover td{background:#fff5d6}
     <div class="card blue"><div class="num" id="s-total">–</div><div class="lbl">Total Obligations</div></div>
     <div class="card green"><div class="num" id="s-completed">–</div><div class="lbl">Completed</div></div>
     <div class="card amber"><div class="num" id="s-pending">–</div><div class="lbl">Pending</div></div>
-    <div class="card red"><div class="num">3</div><div class="lbl">New Obligations to Watch</div></div>
+    <div class="card red"><div class="num" id="s-watch">–</div><div class="lbl">New Obligations to Watch</div></div>
     <div class="card purple"><div class="num" id="s-due">–</div><div class="lbl">Due This Quarter (Jul–Sep)</div></div>
   </div>
 
-  <div class="section-title">New Obligations to Watch</div>
-  <div class="watch-panel">
-    <div class="watch-card afsl">
-      <div class="wc-header">
-        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        AFSL – ASIC
-      </div>
-      <div class="wc-body">
-        <div class="watch-item"><div class="wi-title"><span class="badge change">Change</span>Breach Reporting – Hard 30-Day Deadline</div><div class="wi-desc">No extensions under CA 912DAA / RG 78. Clock starts from knowledge of or recklessness as to the breach. Calibrate the Breaches Register escalation workflow.</div></div>
-        <div class="watch-item"><div class="wi-title"><span class="badge deadline">Deadline</span>FS70 / FS71 Audit Lodgement – 31 Oct 2026</div><div class="wi-desc">Annual financial statements and audit report must be lodged within 4 months of 30 June FY close. Engage auditor now. (CA 989A–D, AFSL Condition)</div></div>
-        <div class="watch-item"><div class="wi-title"><span class="badge change">Change</span>Conflicts of Interest – Enhanced ASIC Scrutiny 2026</div><div class="wi-desc">Ensure Conflicts Register captures perceived conflicts and FSG/SOA disclosure language is current. (CA 912A(1)(aa))</div></div>
-      </div>
-    </div>
-    <div class="watch-card austrac">
-      <div class="wc-header">
-        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        AUSTRAC – AML/CTF Reforms 2026
-      </div>
-      <div class="wc-body">
-        <div class="watch-item"><div class="wi-title"><span class="badge new">Check</span>Compliance Officer Notification – 30 May 2026</div><div class="wi-desc">Confirm AUSTRAC notification of your AML/CTF Compliance Officer is complete and records are current.</div></div>
-        <div class="watch-item"><div class="wi-title"><span class="badge deadline">Deadline – 29 Jul 2026</span>Tranche 2 Enrolment</div><div class="wi-desc">Lawyers, accountants, real estate professionals newly regulated from 1 Jul 2026. Update counterparty CDD procedures. (s51B AML/CTF Act)</div></div>
-        <div class="watch-item"><div class="wi-title"><span class="badge new">New – 1 Jul 2026</span>Travel Rule – Virtual Asset Transfers</div><div class="wi-desc">VASPs must exchange customer information on virtual asset transfers. Assess whether fund activities trigger this obligation.</div></div>
-        <div class="watch-item"><div class="wi-title"><span class="badge change">Live – 31 Mar 2026</span>Enhanced Ongoing CDD Standard</div><div class="wi-desc">Updated CDD obligations already in effect. Confirm transaction monitoring and training are updated to the new standard.</div></div>
-      </div>
-    </div>
-    <div class="watch-card aer">
-      <div class="wc-header">
-        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        AER – Australian Energy Regulator (Upcoming)
-      </div>
-      <div class="wc-body">
-        <div class="watch-item"><div class="wi-title"><span class="badge watch">Watch – 1 Jul 2026</span>AER Separates from ACCC</div><div class="wi-desc">AER becomes fully independent. Monitor transition communications for changes to reporting portals and contact points.</div></div>
-        <div class="watch-item"><div class="wi-title"><span class="badge new">New – 1 Jul 2026</span>Enhanced Concession Disclosure (Retail Code)</div><div class="wi-desc">Retailers must provide more frequent concession/rebate information. Update practices if portfolio companies hold energy retail authorisations.</div></div>
-        <div class="watch-item"><div class="wi-title"><span class="badge deadline">Deadline – 31 Aug 2026</span>Half-Yearly Breach Reports</div><div class="wi-desc">AER-regulated entities submit half-yearly compliance/breach reports by 28 Feb and 31 Aug each year.</div></div>
-        <div class="watch-item"><div class="wi-title"><span class="badge watch">Watch – Dec 2026</span>Hardship Customer Pricing Controls</div><div class="wi-desc">Hardship customers must pay no more than the "deemed better offer". Controls tested in assurance audits after this date.</div></div>
-      </div>
-    </div>
+  <div class="section-title">New Obligations to Watch <span id="news-updated" style="font-size:11px;font-weight:400;opacity:.6;margin-left:8px"></span></div>
+  <div class="watch-panel" id="watchPanel">
+    <div style="padding:20px;color:var(--muted);font-size:13px">Loading…</div>
   </div>
 
   <div class="section-title">Monthly View – Obligations by Next Review Date</div>
@@ -801,6 +767,49 @@ function toast(type, msg, ms=4500) {
 document.getElementById('currentDate').textContent =
   new Date().toLocaleDateString('en-AU', {day:'2-digit', month:'short', year:'numeric'});
 
+
+// ── NEWS / OBLIGATIONS TO WATCH (loaded from news.json) ──────────────────────
+const NEWS_ICONS = {
+  afsl:    '<svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  austrac: '<svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  aer:     '<svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+};
+
+async function loadNews() {
+  const panel = document.getElementById('watchPanel');
+  try {
+    // Bust cache so edits to news.json are visible immediately
+    const res = await fetch('news.json?v=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const news = await res.json();
+
+    // Update "Last updated" label
+    if (news.updated) {
+      document.getElementById('news-updated').textContent = '— ' + news.updated;
+    }
+
+    // Update the summary card count
+    const total = (news.sections || []).reduce((n, s) => n + (s.items || []).length, 0);
+    document.getElementById('s-watch').textContent = total;
+
+    // Render cards
+    panel.innerHTML = (news.sections || []).map(sec => {
+      const icon = NEWS_ICONS[sec.id] || NEWS_ICONS.afsl;
+      const items = (sec.items || []).map(it =>
+        `<div class="watch-item"><div class="wi-title"><span class="badge ${it.badge}">${it.badge.charAt(0).toUpperCase()+it.badge.slice(1)}</span>${escHtml(it.title)}</div><div class="wi-desc">${escHtml(it.desc)}</div></div>`
+      ).join('');
+      return `<div class="watch-card ${sec.id}"><div class="wc-header">${icon} ${escHtml(sec.title)}</div><div class="wc-body">${items}</div></div>`;
+    }).join('');
+  } catch (e) {
+    panel.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:12px">Could not load news.json – ' + e.message + '</div>';
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadNews();
 
 // Initialise MSAL (reads clientId/tenantId from config.js)
 initMsal();

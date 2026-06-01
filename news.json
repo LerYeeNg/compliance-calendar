@@ -1,0 +1,78 @@
+{
+  "updated": "June 2026",
+  "sections": [
+    {
+      "id": "afsl",
+      "title": "AFSL – ASIC",
+      "items": [
+        {
+          "badge": "change",
+          "title": "Breach Reporting – Hard 30-Day Deadline",
+          "desc": "No extensions under CA 912DAA / RG 78. Clock starts from knowledge of or recklessness as to the breach. Calibrate the Breaches Register escalation workflow."
+        },
+        {
+          "badge": "deadline",
+          "title": "FS70 / FS71 Audit Lodgement – 31 Oct 2026",
+          "desc": "Annual financial statements and audit report must be lodged within 4 months of 30 June FY close. Engage auditor now. (CA 989A–D, AFSL Condition)"
+        },
+        {
+          "badge": "change",
+          "title": "Conflicts of Interest – Enhanced ASIC Scrutiny 2026",
+          "desc": "Ensure Conflicts Register captures perceived conflicts and FSG/SOA disclosure language is current. (CA 912A(1)(aa))"
+        }
+      ]
+    },
+    {
+      "id": "austrac",
+      "title": "AUSTRAC – AML/CTF Reforms 2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Compliance Officer Notification – 30 May 2026",
+          "desc": "Confirm AUSTRAC notification of your AML/CTF Compliance Officer is complete and records are current."
+        },
+        {
+          "badge": "deadline",
+          "title": "Tranche 2 Enrolment – Deadline 29 Jul 2026",
+          "desc": "Lawyers, accountants, real estate professionals newly regulated from 1 Jul 2026. Update counterparty CDD procedures. (s51B AML/CTF Act)"
+        },
+        {
+          "badge": "new",
+          "title": "Travel Rule – Virtual Asset Transfers (New – 1 Jul 2026)",
+          "desc": "VASPs must exchange customer information on virtual asset transfers. Assess whether fund activities trigger this obligation."
+        },
+        {
+          "badge": "change",
+          "title": "Enhanced Ongoing CDD Standard (Live – 31 Mar 2026)",
+          "desc": "Updated CDD obligations already in effect. Confirm transaction monitoring and training are updated to the new standard."
+        }
+      ]
+    },
+    {
+      "id": "aer",
+      "title": "AER – Australian Energy Regulator (Upcoming)",
+      "items": [
+        {
+          "badge": "watch",
+          "title": "AER Separates from ACCC (Watch – 1 Jul 2026)",
+          "desc": "AER becomes fully independent. Monitor transition communications for changes to reporting portals and contact points."
+        },
+        {
+          "badge": "new",
+          "title": "Enhanced Concession Disclosure – Retail Code (New – 1 Jul 2026)",
+          "desc": "Retailers must provide more frequent concession/rebate information. Update practices if portfolio companies hold energy retail authorisations."
+        },
+        {
+          "badge": "deadline",
+          "title": "Half-Yearly Breach Reports (Deadline – 31 Aug 2026)",
+          "desc": "AER-regulated entities submit half-yearly compliance/breach reports by 28 Feb and 31 Aug each year."
+        },
+        {
+          "badge": "watch",
+          "title": "Hardship Customer Pricing Controls (Watch – Dec 2026)",
+          "desc": "Hardship customers must pay no more than the \"deemed better offer\". Controls tested in assurance audits after this date."
+        }
+      ]
+    }
+  ]
+}
