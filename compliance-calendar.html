@@ -800,24 +800,6 @@ function toast(type, msg, ms=4500) {
 document.getElementById('currentDate').textContent =
   new Date().toLocaleDateString('en-AU', {day:'2-digit', month:'short', year:'numeric'});
 
-// ── VISIBLE DEBUG PANEL (remove once working) ──────────
-(function() {
-  const el = document.createElement('div');
-  el.id = 'debugPanel';
-  el.style.cssText = 'background:#1e1e1e;color:#d4d4d4;font-family:monospace;font-size:11.5px;padding:10px 20px;line-height:1.7;border-bottom:2px solid #444';
-  const configOk  = typeof CONFIG !== 'undefined';
-  const msalOk    = typeof msal   !== 'undefined';
-  const clientOk  = configOk && CONFIG.clientId && CONFIG.clientId !== 'YOUR_CLIENT_ID';
-  const redirectUri = window.location.href.split('?')[0].split('#')[0];
-  el.innerHTML =
-    '<strong style="color:#569cd6">Diagnostics</strong> &nbsp;'
-    + '| config.js loaded: <b style="color:' + (configOk?'#4ec9b0':'#f44747')+'">' + configOk + '</b>'
-    + ' &nbsp;| clientId set: <b style="color:' + (clientOk?'#4ec9b0':'#f44747')+'">' + clientOk + '</b>'
-    + (configOk && CONFIG.clientId ? ' (<code>' + CONFIG.clientId.substring(0,8) + '…</code>)' : '')
-    + ' &nbsp;| MSAL library: <b style="color:' + (msalOk?'#4ec9b0':'#f44747')+'">' + msalOk + '</b>'
-    + '<br>redirectUri: <code>' + redirectUri + '</code>';
-  document.body.insertBefore(el, document.body.firstChild);
-})();
 
 // Initialise MSAL (reads clientId/tenantId from config.js)
 initMsal();
