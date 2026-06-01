@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Capital Partners – Compliance Calendar</title>
+
+<!-- MSAL.js – Microsoft identity platform for Azure AD login -->
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script src="config.js"></script>
+
+<style>
+:root{--navy:#0d2240;--blue:#1a4a8a;--light-blue:#2d6cc4;--teal:#0f7173;--amber:#e6a817;--red:#c0392b;--green:#27ae60;--purple:#6c3483;--bg:#f4f6fa;--card:#fff;--border:#dde3ef;--text:#1e2d40;--muted:#6b7a91}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13.5px}
+
+.header{background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.header-left h1{font-size:18px;font-weight:700}
+.header-left p{font-size:11.5px;opacity:.7;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:10px}
+.header-date{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 14px;text-align:right}
+.header-date .dt{font-size:16px;font-weight:700}
+.header-date .dl{font-size:10px;opacity:.65}
+
+.conn-bar{padding:8px 28px;font-size:11.5px;display:flex;align-items:center;gap:8px}
+.conn-bar.ok{background:#e9f7ef;color:#1a5a2a}
+.conn-bar.warn{background:#fff3cd;color:#856404}
+.conn-bar.err{background:#fde8e8;color:#8b1a1a}
+.conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ok .conn-dot{background:var(--green)}.warn .conn-dot{background:var(--amber)}.err .conn-dot{background:var(--red)}
+
+.main{max-width:1600px;margin:0 auto;padding:20px}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:22px 0 10px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.card .num{font-size:26px;font-weight:800;line-height:1}
+.card .lbl{font-size:11px;color:var(--muted);margin-top:4px}
+.card.green .num{color:var(--green)}.card.amber .num{color:var(--amber)}
+.card.red .num{color:var(--red)}.card.blue .num{color:var(--light-blue)}.card.purple .num{color:var(--purple)}
+
+.watch-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px}
+.watch-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.wc-header{padding:9px 14px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;display:flex;align-items:center;gap:7px}
+.watch-card.afsl .wc-header{background:var(--blue)}
+.watch-card.austrac .wc-header{background:var(--teal)}
+.watch-card.aer .wc-header{background:var(--purple)}
+.wc-body{padding:10px 14px}
+.watch-item{padding:7px 0;border-bottom:1px solid var(--border)}
+.watch-item:last-child{border-bottom:none}
+.wi-title{font-weight:600;font-size:12px;margin-bottom:3px}
+.wi-desc{font-size:11.5px;color:var(--muted);line-height:1.45}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-right:4px}
+.badge.new{background:#fde8e8;color:var(--red)}.badge.deadline{background:#fff3cd;color:#856404}
+.badge.change{background:#e8f4fd;color:var(--blue)}.badge.watch{background:#f0e8ff;color:var(--purple)}
+
+.month-strip{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
+.month-cell{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .15s}
+.month-cell:hover{border-color:var(--light-blue)}
+.month-cell.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.mc-name{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.mc-count{font-size:18px;font-weight:800;color:var(--light-blue)}
+.month-cell.active .mc-count{color:rgba(255,255,255,.9)}
+
+.filters{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.filters label{font-size:11px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.filters select,.filters input[type=text]{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text);background:var(--bg);min-width:130px}
+.filters select:focus,.filters input:focus{outline:2px solid var(--light-blue)}
+.btn-act{color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:600;align-self:flex-end;display:flex;align-items:center;gap:5px}
+.btn-refresh{background:var(--teal)}.btn-refresh:hover{opacity:.85}
+.btn-reset{background:var(--navy)}.btn-reset:hover{background:var(--blue)}
+.btn-refresh.spinning svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.table-meta{padding:9px 16px;font-size:11.5px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+table{width:100%;border-collapse:collapse}
+th{background:var(--navy);color:#fff;padding:9px 10px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{background:var(--blue)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr.clickable{cursor:pointer}
+tr.clickable:hover td{background:#f0f5ff}
+tr.row-pending td{background:#fffbf0}
+tr.row-pending:hover td{background:#fff5d6}
+
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.tag-AML-CTF{background:#e6f9f6;color:#0f5f5f}.tag-Compliance{background:#e8f4fd;color:#1a4a8a}
+.tag-Breaches{background:#fde8e8;color:#8b1a1a}.tag-Financial-Resources{background:#e9f7ef;color:#1a6b3a}
+.tag-Representatives{background:#f0e8ff;color:#5b1f8a}.tag-Risk-Management{background:#fff0e0;color:#8a4a00}
+.tag-Company-Secretary{background:#f5e6ff;color:#6a1a8a}.tag-Insider-Trading{background:#ffe8e8;color:#8a1a1a}
+.tag-Marketing{background:#e8f0ff;color:#1a2a8a}.tag-Privacy{background:#ffe8f5;color:#8a1a5a}
+.tag-Training{background:#f0ffe8;color:#2a6a1a}.tag-Outsourcing{background:#fff8e0;color:#6a5a00}
+.tag-Dispute-Resolution{background:#e8fffc;color:#0a5a50}.tag-Cyber-Attack{background:#ffe0e8;color:#8a003a}
+.tag-Information-Technology{background:#e0eaff;color:#1a3a8a}.tag-Document-Retention{background:#f8f0e0;color:#5a4a00}
+.tag-Human-Resources{background:#e8ffe8;color:#0a5a0a}.tag-Responsible-Manager{background:#e8e8ff;color:#1a0a8a}
+.tag-APRA{background:#ffe8e0;color:#8a2a0a}.tag-Conflicts-of-Interest{background:#fff0f8;color:#8a006a}.tag-AER{background:#f0ffe8;color:#1a5a1a}
+
+.freq{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600}
+.freq-Monthly{background:#e0f4ff;color:#0a5a8a}.freq-Quarterly{background:#e8f0e0;color:#2a5a0a}
+.freq-Annually{background:#f0e8ff;color:#5a0a8a}.freq-Ad{background:#f5f5f5;color:#555}
+.freq-Biannually{background:#ffe0f0;color:#8a0a5a}.freq-Every{background:#fff0e0;color:#8a4a00}
+
+.status-yes{color:var(--green);font-weight:700}.status-na{color:var(--muted)}.status-pending{color:var(--amber);font-weight:700}
+.date-urgent{color:var(--red);font-weight:700}.date-soon{color:var(--amber);font-weight:700}.date-ok{color:var(--green)}
+
+.pager{display:flex;align-items:center;gap:6px;padding:10px 16px;border-top:1px solid var(--border);justify-content:flex-end;flex-wrap:wrap}
+.pager button{border:1px solid var(--border);background:var(--card);border-radius:5px;padding:4px 10px;cursor:pointer;font-size:12px}
+.pager button:hover{background:var(--bg)}.pager button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pager button:disabled{opacity:.4;cursor:default}.pager-info{font-size:11.5px;color:var(--muted);margin-right:auto}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.hidden{display:none}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-header{padding:16px 20px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;color:rgba(255,255,255,.7);font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
+.modal-close:hover{color:#fff}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.info-row{background:var(--bg);border-radius:8px;padding:10px 14px;margin-bottom:14px}
+.info-row .lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:3px}
+.info-row .val{font-size:13px;line-height:1.4}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.form-group select,.form-group input,.form-group textarea{width:100%;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);background:#fff;font-family:inherit}
+.form-group select:focus,.form-group input:focus,.form-group textarea:focus{outline:2px solid var(--light-blue)}
+.form-group textarea{min-height:80px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;align-items:center}
+.btn-save{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-save:hover{background:var(--light-blue)}.btn-save:disabled{opacity:.5;cursor:default}
+.btn-cancel{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:9px 18px;font-size:13px;cursor:pointer}
+.saving-indicator{font-size:12px;color:var(--muted);margin-right:auto}
+
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,.12);display:flex;align-items:center;gap:10px;min-width:280px;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+.toast.success{border-left:4px solid var(--green)}.toast.error{border-left:4px solid var(--red)}.toast.info{border-left:4px solid var(--blue)}
+.toast-msg{flex:1;font-size:12.5px}.toast-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1}
+
+.sources{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:11.5px;color:var(--muted)}
+.sources a{color:var(--light-blue);text-decoration:none}.sources a:hover{text-decoration:underline}
+.sources ul{padding-left:16px;margin-top:6px}.sources li{margin-bottom:3px}
+
+.hidden{display:none!important}
+@media(max-width:900px){.month-strip{grid-template-columns:repeat(6,1fr)}}
+@media(max-width:600px){.month-strip{grid-template-columns:repeat(3,1fr)}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>CS Capital Partners – Compliance Calendar</h1>
+    <p>AFSL &middot; AML/CTF &middot; VCA &middot; Company Secretary &middot; AER (watch)</p>
+  </div>
+  <div class="header-right">
+    <div id="userBadge" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:6px 12px">
+      <svg width="14" height="14" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span id="userName" style="font-size:12px;opacity:.85">Not signed in</span>
+      <button id="btnLogin" onclick="signIn()" style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:5px;padding:3px 10px;font-size:11px;cursor:pointer;font-weight:600">Sign In</button>
+      <button id="btnLogout" onclick="signOut()" class="hidden" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75);border-radius:5px;padding:3px 10px;font-size:11px;cursor:pointer">Sign Out</button>
+    </div>
+    <div class="header-date">
+      <div class="dt" id="currentDate">–</div>
+      <div class="dl">Today</div>
+    </div>
+  </div>
+</div>
+
+<div class="conn-bar warn" id="connBar">
+  <div class="conn-dot"></div>
+  <span id="connMsg">Connecting to SharePoint…</span>
+</div>
+
+<div class="main">
+
+  <div class="section-title">Overview</div>
+  <div class="summary-grid">
+    <div class="card blue"><div class="num" id="s-total">–</div><div class="lbl">Total Obligations</div></div>
+    <div class="card green"><div class="num" id="s-completed">–</div><div class="lbl">Completed</div></div>
+    <div class="card amber"><div class="num" id="s-pending">–</div><div class="lbl">Pending</div></div>
+    <div class="card red"><div class="num">3</div><div class="lbl">New Obligations to Watch</div></div>
+    <div class="card purple"><div class="num" id="s-due">–</div><div class="lbl">Due This Quarter (Jul–Sep)</div></div>
+  </div>
+
+  <div class="section-title">New Obligations to Watch</div>
+  <div class="watch-panel">
+    <div class="watch-card afsl">
+      <div class="wc-header">
+        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        AFSL – ASIC
+      </div>
+      <div class="wc-body">
+        <div class="watch-item"><div class="wi-title"><span class="badge change">Change</span>Breach Reporting – Hard 30-Day Deadline</div><div class="wi-desc">No extensions under CA 912DAA / RG 78. Clock starts from knowledge of or recklessness as to the breach. Calibrate the Breaches Register escalation workflow.</div></div>
+        <div class="watch-item"><div class="wi-title"><span class="badge deadline">Deadline</span>FS70 / FS71 Audit Lodgement – 31 Oct 2026</div><div class="wi-desc">Annual financial statements and audit report must be lodged within 4 months of 30 June FY close. Engage auditor now. (CA 989A–D, AFSL Condition)</div></div>
+        <div class="watch-item"><div class="wi-title"><span class="badge change">Change</span>Conflicts of Interest – Enhanced ASIC Scrutiny 2026</div><div class="wi-desc">Ensure Conflicts Register captures perceived conflicts and FSG/SOA disclosure language is current. (CA 912A(1)(aa))</div></div>
+      </div>
+    </div>
+    <div class="watch-card austrac">
+      <div class="wc-header">
+        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        AUSTRAC – AML/CTF Reforms 2026
+      </div>
+      <div class="wc-body">
+        <div class="watch-item"><div class="wi-title"><span class="badge new">Check</span>Compliance Officer Notification – 30 May 2026</div><div class="wi-desc">Confirm AUSTRAC notification of your AML/CTF Compliance Officer is complete and records are current.</div></div>
+        <div class="watch-item"><div class="wi-title"><span class="badge deadline">Deadline – 29 Jul 2026</span>Tranche 2 Enrolment</div><div class="wi-desc">Lawyers, accountants, real estate professionals newly regulated from 1 Jul 2026. Update counterparty CDD procedures. (s51B AML/CTF Act)</div></div>
+        <div class="watch-item"><div class="wi-title"><span class="badge new">New – 1 Jul 2026</span>Travel Rule – Virtual Asset Transfers</div><div class="wi-desc">VASPs must exchange customer information on virtual asset transfers. Assess whether fund activities trigger this obligation.</div></div>
+        <div class="watch-item"><div class="wi-title"><span class="badge change">Live – 31 Mar 2026</span>Enhanced Ongoing CDD Standard</div><div class="wi-desc">Updated CDD obligations already in effect. Confirm transaction monitoring and training are updated to the new standard.</div></div>
+      </div>
+    </div>
+    <div class="watch-card aer">
+      <div class="wc-header">
+        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        AER – Australian Energy Regulator (Upcoming)
+      </div>
+      <div class="wc-body">
+        <div class="watch-item"><div class="wi-title"><span class="badge watch">Watch – 1 Jul 2026</span>AER Separates from ACCC</div><div class="wi-desc">AER becomes fully independent. Monitor transition communications for changes to reporting portals and contact points.</div></div>
+        <div class="watch-item"><div class="wi-title"><span class="badge new">New – 1 Jul 2026</span>Enhanced Concession Disclosure (Retail Code)</div><div class="wi-desc">Retailers must provide more frequent concession/rebate information. Update practices if portfolio companies hold energy retail authorisations.</div></div>
+        <div class="watch-item"><div class="wi-title"><span class="badge deadline">Deadline – 31 Aug 2026</span>Half-Yearly Breach Reports</div><div class="wi-desc">AER-regulated entities submit half-yearly compliance/breach reports by 28 Feb and 31 Aug each year.</div></div>
+        <div class="watch-item"><div class="wi-title"><span class="badge watch">Watch – Dec 2026</span>Hardship Customer Pricing Controls</div><div class="wi-desc">Hardship customers must pay no more than the "deemed better offer". Controls tested in assurance audits after this date.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Monthly View – Obligations by Next Review Date</div>
+  <div class="month-strip" id="monthStrip">
+    <div class="month-cell" data-month="0" onclick="filterMonth(0)"><div class="mc-name">Jan</div><div class="mc-count" id="mc0">–</div></div>
+    <div class="month-cell" data-month="1" onclick="filterMonth(1)"><div class="mc-name">Feb</div><div class="mc-count" id="mc1">–</div></div>
+    <div class="month-cell" data-month="2" onclick="filterMonth(2)"><div class="mc-name">Mar</div><div class="mc-count" id="mc2">–</div></div>
+    <div class="month-cell" data-month="3" onclick="filterMonth(3)"><div class="mc-name">Apr</div><div class="mc-count" id="mc3">–</div></div>
+    <div class="month-cell" data-month="4" onclick="filterMonth(4)"><div class="mc-name">May</div><div class="mc-count" id="mc4">–</div></div>
+    <div class="month-cell" data-month="5" onclick="filterMonth(5)"><div class="mc-name">Jun</div><div class="mc-count" id="mc5">–</div></div>
+    <div class="month-cell" data-month="6" onclick="filterMonth(6)"><div class="mc-name">Jul</div><div class="mc-count" id="mc6">–</div></div>
+    <div class="month-cell" data-month="7" onclick="filterMonth(7)"><div class="mc-name">Aug</div><div class="mc-count" id="mc7">–</div></div>
+    <div class="month-cell" data-month="8" onclick="filterMonth(8)"><div class="mc-name">Sep</div><div class="mc-count" id="mc8">–</div></div>
+    <div class="month-cell" data-month="9" onclick="filterMonth(9)"><div class="mc-name">Oct</div><div class="mc-count" id="mc9">–</div></div>
+    <div class="month-cell" data-month="10" onclick="filterMonth(10)"><div class="mc-name">Nov</div><div class="mc-count" id="mc10">–</div></div>
+    <div class="month-cell" data-month="11" onclick="filterMonth(11)"><div class="mc-name">Dec</div><div class="mc-count" id="mc11">–</div></div>
+  </div>
+
+  <div class="section-title">All Obligations</div>
+  <div class="filters">
+    <label>Search<input type="text" id="fSearch" placeholder="Task, obligation, reference…" oninput="applyFilters()"></label>
+    <label>Section<select id="fSection" onchange="applyFilters()"><option value="">All sections</option></select></label>
+    <label>Frequency
+      <select id="fFreq" onchange="applyFilters()">
+        <option value="">All</option>
+        <option>Monthly</option><option>Quarterly</option><option>Annually</option>
+        <option>Biannually</option><option>Ad hoc</option>
+        <option>Every two (2) years</option><option>Every three (3) years</option>
+      </select>
+    </label>
+    <label>Status
+      <select id="fStatus" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="Yes">Completed</option>
+        <option value="N/A">Not Applicable</option>
+        <option value="pending">Pending</option>
+      </select>
+    </label>
+    <button class="btn-act btn-refresh" id="btnRefresh" onclick="loadData()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Refresh
+    </button>
+    <button class="btn-act btn-reset" onclick="resetFilters()">Reset</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-meta">
+      <span id="tableInfo">Loading…</span>
+      <span style="font-size:11px">Click a row to edit &nbsp;|&nbsp; Click headers to sort &nbsp;|&nbsp; Click months above to filter</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('taskNo')">#</th>
+            <th onclick="sortTable('section')">Section</th>
+            <th onclick="sortTable('obligation')" style="min-width:220px">Compliance Obligation</th>
+            <th onclick="sortTable('reference')">Reference</th>
+            <th onclick="sortTable('officer')">Officer</th>
+            <th onclick="sortTable('frequency')">Frequency</th>
+            <th onclick="sortTable('completed')">Completed</th>
+            <th onclick="sortTable('completionDate')">Completion Date</th>
+            <th onclick="sortTable('reviewDate')">Next Review</th>
+            <th style="min-width:130px">Comments</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pager" id="pager"></div>
+  </div>
+
+  <div class="section-title">Research Sources</div>
+  <div class="sources">
+    <strong>Online sources used for "New Obligations to Watch":</strong>
+    <ul>
+      <li><a href="https://www.asic.gov.au/for-finance-professionals/afs-licensees/afs-licensee-obligations/" target="_blank">ASIC – AFS Licensee Obligations</a></li>
+      <li><a href="https://www.austrac.gov.au/about-us/legislation/updates-legislation/amlctf-transitional-rules-2026" target="_blank">AUSTRAC – AML/CTF Transitional Rules 2026</a></li>
+      <li><a href="https://fintech.global/2026/04/08/austrac-sets-2026-deadlines-for-aml-ctf-reform-compliance/" target="_blank">Fintech Global – AUSTRAC 2026 deadlines</a></li>
+      <li><a href="https://www.minterellison.com/articles/austrac-key-guidance-released-on-2026-aml-ctf-reforms" target="_blank">MinterEllison – AUSTRAC Key Guidance 2026</a></li>
+      <li><a href="https://www.aer.gov.au/industry/retail/compliance-and-enforcement" target="_blank">AER – Retail Compliance and Enforcement</a></li>
+      <li><a href="https://www.compliancequarter.com.au/energy-retailer-assurance-audits-in-2026-an-australian-guide/" target="_blank">Compliance Quarter – Energy Retailer Assurance Audits 2026</a></li>
+    </ul>
+    <p style="margin-top:8px;font-size:11px;color:#999">For internal reference only. Verify all deadlines with your legal advisers. Last updated: June 2026.</p>
+  </div>
+
+</div><!-- /main -->
+
+<!-- Edit Modal -->
+<div class="modal-overlay hidden" id="modalOverlay" onclick="closeModalOnBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Edit Obligation</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-row"><div class="lbl">Obligation</div><div class="val" id="mObligation">–</div></div>
+      <div class="info-row" style="margin-bottom:20px"><div class="lbl">Reference</div><div class="val" id="mReference">–</div></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Completed Status</label>
+          <select id="mCompleted">
+            <option value="">— Pending —</option>
+            <option value="Yes">&#10003; Yes – Completed</option>
+            <option value="N/A">N/A – Not Applicable</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Responsible Officer</label>
+          <input type="text" id="mOfficer" placeholder="e.g. Director">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Completion Date</label>
+          <input type="date" id="mCompletionDate">
+        </div>
+        <div class="form-group">
+          <label>Next Review Date</label>
+          <input type="date" id="mReviewDate">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Comments</label>
+        <textarea id="mComments" placeholder="Add notes, progress updates, links to evidence…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span class="saving-indicator hidden" id="savingIndicator">Saving to SharePoint…</span>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="btnSave" onclick="saveItem()">Save to SharePoint</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let allItems    = [];
+let filtered    = [];
+let sortKey     = 'reviewDate';
+let sortDir     = 1;
+let activePage  = 1;
+let activeMonth = -1;
+let editingItem = null;
+let formDigest  = null;
+let digestExpiry = 0;
+const PAGE_SIZE = 25;
+
+// ── MSAL / AZURE AD AUTH ───────────────────────────────
+let msalInstance   = null;
+let currentAccount = null;
+let _tokenCache    = { token: null, expiry: 0 };
+
+// Derive the SharePoint tenant root from siteUrl, e.g.
+// 'https://contoso.sharepoint.com/sites/foo' → 'https://contoso.sharepoint.com'
+function spRoot() {
+  const u = new URL(CONFIG.siteUrl);
+  return u.origin;                   // e.g. https://netorgft13870443.sharepoint.com
+}
+
+// Scopes: AllSites.Write on the SharePoint resource
+const SP_SCOPES = () => [spRoot() + '/AllSites.Write'];
+
+function initMsal() {
+  if (!CONFIG.clientId || CONFIG.clientId === 'YOUR_CLIENT_ID') return;
+  msalInstance = new msal.PublicClientApplication({
+    auth: {
+      clientId:    CONFIG.clientId,
+      authority:   'https://login.microsoftonline.com/' + CONFIG.tenantId,
+      redirectUri: window.location.href.split('?')[0].split('#')[0],
+    },
+    cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: true },
+  });
+  // Handle any redirect response in the URL
+  msalInstance.handleRedirectPromise().then(resp => {
+    if (resp) { currentAccount = resp.account; updateUserUI(); }
+  }).catch(() => {});
+  // Restore existing session
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) { currentAccount = accounts[0]; updateUserUI(); }
+}
+
+async function getToken() {
+  if (!msalInstance) throw new Error('Azure AD not configured — add clientId and tenantId to config.js');
+  if (_tokenCache.token && Date.now() < _tokenCache.expiry) return _tokenCache.token;
+
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length === 0) {
+    // No session — pop a login window
+    const r = await msalInstance.loginPopup({ scopes: SP_SCOPES() });
+    currentAccount = r.account;
+    updateUserUI();
+    _tokenCache = { token: r.accessToken, expiry: Date.now() + 55 * 60 * 1000 };
+    return r.accessToken;
+  }
+
+  currentAccount = accounts[0];
+  try {
+    const r = await msalInstance.acquireTokenSilent({ scopes: SP_SCOPES(), account: currentAccount });
+    _tokenCache = { token: r.accessToken, expiry: Date.now() + 55 * 60 * 1000 };
+    return r.accessToken;
+  } catch {
+    const r = await msalInstance.acquireTokenPopup({ scopes: SP_SCOPES() });
+    _tokenCache = { token: r.accessToken, expiry: Date.now() + 55 * 60 * 1000 };
+    return r.accessToken;
+  }
+}
+
+function updateUserUI() {
+  const name = currentAccount ? (currentAccount.name || currentAccount.username) : '';
+  document.getElementById('userName').textContent = name || 'Not signed in';
+  document.getElementById('btnLogin').classList.toggle('hidden', !!currentAccount);
+  document.getElementById('btnLogout').classList.toggle('hidden', !currentAccount);
+}
+
+async function signIn() {
+  try {
+    const r = await msalInstance.loginPopup({ scopes: SP_SCOPES() });
+    currentAccount = r.account;
+    updateUserUI();
+    loadData();
+  } catch (e) { toast('error', 'Sign-in failed: ' + e.message); }
+}
+
+function signOut() {
+  msalInstance.logoutPopup({ account: currentAccount });
+  currentAccount = null;
+  _tokenCache = { token: null, expiry: 0 };
+  updateUserUI();
+}
+
+// ── SHAREPOINT REST API ────────────────────────────────
+function apiBase() { return CONFIG.siteUrl.replace(/\/$/, '') + '/_api'; }
+
+async function spGet(path) {
+  const token = await getToken();
+  const r = await fetch(apiBase() + path, {
+    headers: { Accept: 'application/json;odata=nometadata', Authorization: 'Bearer ' + token },
+  });
+  if (!r.ok) throw new Error('SharePoint ' + r.status + ' ' + r.statusText);
+  return r.json();
+}
+
+async function getDigest() {
+  if (formDigest && Date.now() < digestExpiry) return formDigest;
+  const token = await getToken();
+  const r = await fetch(apiBase() + '/contextinfo', {
+    method: 'POST',
+    headers: { Accept: 'application/json;odata=nometadata', Authorization: 'Bearer ' + token },
+  });
+  if (!r.ok) throw new Error('Could not get form digest (' + r.status + ')');
+  const data = await r.json();
+  formDigest   = data.FormDigestValue;
+  digestExpiry = Date.now() + (data.FormDigestTimeoutSeconds - 60) * 1000;
+  return formDigest;
+}
+
+async function spPatch(itemId, fields) {
+  const token  = await getToken();
+  const digest = await getDigest();
+  const r = await fetch(
+    apiBase() + "/web/lists/getbytitle('" + encodeURIComponent(CONFIG.listName) + "')/items(" + itemId + ")",
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json;odata=nometadata', 'Content-Type': 'application/json;odata=nometadata',
+        'X-RequestDigest': digest, 'X-HTTP-Method': 'MERGE', 'IF-MATCH': '*',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify(fields),
+    }
+  );
+  if (!r.ok) throw new Error('Save failed (' + r.status + ') – ' + (await r.text()));
+}
+
+// ── LOAD DATA ──────────────────────────────────────────
+async function loadData() {
+  const btn = document.getElementById('btnRefresh');
+  btn.classList.add('spinning');
+  setConnBar('warn', 'Connecting to SharePoint…');
+
+  try {
+    const f   = CONFIG.fields;
+    const sel = Object.values(f).join(',') + ',Id';
+    const data = await spGet(
+      "/web/lists/getbytitle('" + encodeURIComponent(CONFIG.listName) + "')" +
+      "/items?$select=" + sel + "&$top=5000&$orderby=Id"
+    );
+
+    allItems = data.value.map(item => ({
+      _id:            item.Id,
+      taskNo:         item[f.taskNo]         || '',
+      entity:         item[f.entity]         || '',
+      section:        item[f.section]        || '',
+      obligation:     item[f.obligation]     || '',
+      reference:      item[f.reference]      || '',
+      officer:        item[f.officer]        || '',
+      frequency:      item[f.frequency]      || '',
+      completed:      item[f.completed]      || '',
+      completionDate: spDate(item[f.completionDate]),
+      reviewDate:     spDate(item[f.reviewDate]),
+      comments:       item[f.comments]       || '',
+    }));
+
+    setConnBar('ok',
+      'Connected &middot; <strong>' + CONFIG.listName + '</strong> &middot; ' +
+      allItems.length + ' items &middot; Synced ' + new Date().toLocaleTimeString('en-AU')
+    );
+    toast('success', 'Loaded ' + allItems.length + ' obligations from SharePoint');
+    populateSectionFilter(allItems);
+    renderFromData(allItems);
+
+  } catch (e) {
+    console.error(e);
+    const notConfigured = !CONFIG.clientId || CONFIG.clientId === 'YOUR_CLIENT_ID';
+    setConnBar('err',
+      notConfigured
+        ? 'Add <strong>clientId</strong> and <strong>tenantId</strong> to config.js, then refresh.'
+        : 'Could not reach SharePoint: ' + e.message + ' – showing local data.'
+    );
+    if (!notConfigured) toast('error', e.message);
+    populateSectionFilter(FALLBACK_DATA);
+    renderFromData(FALLBACK_DATA);
+  }
+
+  btn.classList.remove('spinning');
+}
+
+// ── EDIT & SAVE ────────────────────────────────────────
+function openEdit(encoded) {
+  editingItem = JSON.parse(decodeURIComponent(encoded));
+  document.getElementById('modalTitle').textContent = 'Task #' + editingItem.taskNo + ' – ' + editingItem.section;
+  document.getElementById('mObligation').textContent = editingItem.obligation || '—';
+  document.getElementById('mReference').textContent  = editingItem.reference  || '—';
+  document.getElementById('mCompleted').value        = editingItem.completed  || '';
+  document.getElementById('mOfficer').value          = editingItem.officer    || '';
+  document.getElementById('mCompletionDate').value   = editingItem.completionDate || '';
+  document.getElementById('mReviewDate').value       = editingItem.reviewDate    || '';
+  document.getElementById('mComments').value         = editingItem.comments   || '';
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); editingItem = null; }
+function closeModalOnBg(e) { if (e.target.id === 'modalOverlay') closeModal(); }
+
+async function saveItem() {
+  if (!editingItem) return;
+  const f = CONFIG.fields;
+
+  const completedVal  = document.getElementById('mCompleted').value;
+  const officerVal    = document.getElementById('mOfficer').value;
+  const compDateVal   = document.getElementById('mCompletionDate').value;
+  const reviewDateVal = document.getElementById('mReviewDate').value;
+  const commentsVal   = document.getElementById('mComments').value;
+
+  // Optimistic local update so the table reflects the change immediately
+  editingItem.completed      = completedVal;
+  editingItem.officer        = officerVal;
+  editingItem.completionDate = compDateVal;
+  editingItem.reviewDate     = reviewDateVal;
+  editingItem.comments       = commentsVal;
+
+  // If no SharePoint item ID (e.g. using fallback data), save locally only
+  if (!editingItem._id) {
+    toast('info', 'Saved locally (connect to SharePoint to persist).');
+    closeModal(); applyFilters(); return;
+  }
+
+  const btn = document.getElementById('btnSave');
+  const ind = document.getElementById('savingIndicator');
+  btn.disabled = true; ind.classList.remove('hidden');
+
+  try {
+    await spPatch(editingItem._id, {
+      [f.completed]:      completedVal  || null,
+      [f.officer]:        officerVal    || null,
+      [f.completionDate]: compDateVal   ? compDateVal  + 'T00:00:00Z' : null,
+      [f.reviewDate]:     reviewDateVal ? reviewDateVal + 'T00:00:00Z' : null,
+      [f.comments]:       commentsVal   || null,
+    });
+    toast('success', 'Task #' + editingItem.taskNo + ' saved to SharePoint ✓');
+    closeModal(); applyFilters();
+  } catch (e) {
+    toast('error', 'Save failed: ' + e.message);
+  }
+
+  btn.disabled = false; ind.classList.add('hidden');
+}
+
+// ── FILTERS & SORT ─────────────────────────────────────
+function populateSectionFilter(data) {
+  const sel = document.getElementById('fSection');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All sections</option>';
+  [...new Set(data.map(r => r.section))].sort().forEach(s => {
+    sel.innerHTML += '<option value="' + s + '"' + (s === cur ? ' selected' : '') + '>' + s + '</option>';
+  });
+}
+
+function filterMonth(m) {
+  activeMonth = activeMonth === m ? -1 : m;
+  document.querySelectorAll('.month-cell').forEach(c => c.classList.remove('active'));
+  if (activeMonth >= 0) document.querySelector('.month-cell[data-month="' + m + '"]').classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const src     = allItems.length ? allItems : FALLBACK_DATA;
+  const search  = document.getElementById('fSearch').value.toLowerCase();
+  const section = document.getElementById('fSection').value;
+  const freq    = document.getElementById('fFreq').value;
+  const status  = document.getElementById('fStatus').value;
+
+  filtered = src.filter(r => {
+    if (search && ![(r.taskNo||''),(r.obligation||''),(r.section||''),(r.reference||''),(r.comments||'')]
+      .join(' ').toLowerCase().includes(search)) return false;
+    if (section && r.section !== section) return false;
+    if (freq && !(r.frequency||'').startsWith(freq.split(' ')[0])) return false;
+    if (status === 'Yes'     && (r.completed||'').toLowerCase() !== 'yes') return false;
+    if (status === 'N/A'     && (r.completed||'').toLowerCase() !== 'n/a') return false;
+    if (status === 'pending' && (r.completed||'') !== '') return false;
+    if (activeMonth >= 0) {
+      const d = pd(r.reviewDate);
+      if (!d || d.getMonth() !== activeMonth) return false;
+    }
+    return true;
+  });
+
+  sortData(); activePage = 1; renderTable();
+}
+
+function resetFilters() {
+  document.getElementById('fSearch').value  = '';
+  document.getElementById('fSection').value = '';
+  document.getElementById('fFreq').value    = '';
+  document.getElementById('fStatus').value  = '';
+  activeMonth = -1;
+  document.querySelectorAll('.month-cell').forEach(c => c.classList.remove('active'));
+  applyFilters();
+}
+
+function sortTable(key) {
+  sortDir = sortKey === key ? -sortDir : 1; sortKey = key;
+  sortData(); renderTable();
+}
+
+function sortData() {
+  filtered.sort((a, b) => {
+    let av = a[sortKey] || '', bv = b[sortKey] || '';
+    if (sortKey === 'reviewDate' || sortKey === 'completionDate') {
+      av = pd(av) || new Date(9999,0,1); bv = pd(bv) || new Date(9999,0,1);
+      return sortDir * (av - bv);
+    }
+    if (sortKey === 'taskNo') { av = parseInt(av)||0; bv = parseInt(bv)||0; }
+    return sortDir * (av < bv ? -1 : av > bv ? 1 : 0);
+  });
+}
+
+// ── RENDER ─────────────────────────────────────────────
+function renderFromData(data) {
+  allItems = data;
+  document.getElementById('s-total').textContent     = data.length;
+  document.getElementById('s-completed').textContent = data.filter(r => (r.completed||'').toLowerCase() === 'yes').length;
+  document.getElementById('s-pending').textContent   = data.filter(r => !(r.completed||'')).length;
+  document.getElementById('s-due').textContent = data.filter(r => {
+    const d = pd(r.reviewDate); return d && d.getMonth() >= 6 && d.getMonth() <= 8;
+  }).length;
+  for (let m = 0; m < 12; m++) {
+    document.getElementById('mc' + m).textContent = data.filter(r => {
+      const d = pd(r.reviewDate); return d && d.getMonth() === m;
+    }).length;
+  }
+  applyFilters();
+}
+
+function renderTable() {
+  const total = filtered.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (activePage > pages) activePage = pages;
+  const start = (activePage - 1) * PAGE_SIZE;
+  const slice = filtered.slice(start, start + PAGE_SIZE);
+
+  document.getElementById('tableBody').innerHTML = slice.map(r => {
+    const isPending = !(r.completed || '');
+    const enc = encodeURIComponent(JSON.stringify(r));
+    const sTag = 'tag-' + (r.section||'').replace(/[\s\/]/g,'-').replace(/[()]/g,'');
+    const fTag = 'freq-' + (r.frequency||'').split(' ')[0];
+    return '<tr class="clickable' + (isPending ? ' row-pending' : '') + '" onclick="openEdit(\'' + enc + '\')">'
+      + '<td style="font-weight:700;color:var(--muted);white-space:nowrap">' + (r.taskNo||'—') + '</td>'
+      + '<td><span class="tag ' + sTag + '">' + (r.section||'—') + '</span></td>'
+      + '<td>' + (r.obligation||'—') + '</td>'
+      + '<td style="white-space:nowrap;font-size:11px;color:var(--muted)">' + (r.reference||'—') + '</td>'
+      + '<td style="white-space:nowrap">' + (r.officer||'—') + '</td>'
+      + '<td><span class="freq ' + fTag + '">' + (r.frequency||'—') + '</span></td>'
+      + '<td>' + statusHTML(r.completed) + '</td>'
+      + '<td style="white-space:nowrap;font-size:11.5px">' + fmtDate(r.completionDate) + '</td>'
+      + '<td style="white-space:nowrap;font-size:11.5px" class="' + dateClass(r.reviewDate) + '">' + fmtDate(r.reviewDate) + '</td>'
+      + '<td style="font-size:11px;color:var(--muted);max-width:180px">' + (r.comments||'—') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  document.getElementById('tableInfo').textContent =
+    'Showing ' + (total ? start + 1 : 0) + '–' + Math.min(start + PAGE_SIZE, total) + ' of ' + total + ' obligations (click any row to edit)';
+
+  let html = '<span class="pager-info">Page ' + activePage + ' of ' + pages + '</span>';
+  html += '<button onclick="goPage(' + (activePage-1) + ')" ' + (activePage===1?'disabled':'') + '>&#8249; Prev</button>';
+  for (let p = Math.max(1,activePage-2); p <= Math.min(pages,activePage+2); p++)
+    html += '<button class="' + (p===activePage?'active':'') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+  html += '<button onclick="goPage(' + (activePage+1) + ')" ' + (activePage===pages?'disabled':'') + '>Next &#8250;</button>';
+  document.getElementById('pager').innerHTML = html;
+}
+
+function goPage(p) {
+  const pages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (p < 1 || p > pages) return; activePage = p; renderTable();
+}
+
+// ── HELPERS ────────────────────────────────────────────
+function pd(s) {
+  if (!s) return null;
+  // ISO: 2026-07-15 or 2026-07-15T00:00:00Z
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return new Date(s.substring(0,10) + 'T00:00:00');
+  const p = s.split('/');
+  if (p.length === 3) { const a=parseInt(p[0]),b=parseInt(p[1]);
+    return a > 12 ? new Date(parseInt(p[2]),b-1,a) : new Date(parseInt(p[2]),a-1,b); }
+  return null;
+}
+// SharePoint returns dates as "2026-07-15T00:00:00Z" – trim to YYYY-MM-DD
+function spDate(v) { return v ? v.substring(0, 10) : ''; }
+function fmtDate(s) { const d=pd(s); return d&&!isNaN(d)?d.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'}):'—'; }
+function dateClass(s) { const d=pd(s); if(!d) return ''; const diff=(d-new Date())/86400000; return diff<0?'date-ok':diff<=30?'date-urgent':diff<=90?'date-soon':'date-ok'; }
+function statusHTML(s) { if(!s) return '<span class="status-pending">—</span>'; if(s.toLowerCase()==='yes') return '<span class="status-yes">&#10003; Yes</span>'; if(s.toLowerCase()==='n/a') return '<span class="status-na">N/A</span>'; return '<span class="status-pending">'+s+'</span>'; }
+function setConnBar(type, msg) { document.getElementById('connBar').className='conn-bar '+type; document.getElementById('connMsg').innerHTML=msg; }
+function toast(type, msg, ms=4500) {
+  const icons={success:'&#10003;',error:'&#10005;',info:'&#8505;'};
+  const id='t'+Date.now(); const el=document.createElement('div');
+  el.className='toast '+type; el.id=id;
+  el.innerHTML='<span style="font-size:16px;color:'+(type==='success'?'var(--green)':type==='error'?'var(--red)':'var(--blue)')+'">'+icons[type]+'</span><span class="toast-msg">'+msg+'</span><button class="toast-close" onclick="document.getElementById(\''+id+'\').remove()">&times;</button>';
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => { try{el.remove()}catch{} }, ms);
+}
+
+// ── INIT ───────────────────────────────────────────────
+document.getElementById('currentDate').textContent =
+  new Date().toLocaleDateString('en-AU', {day:'2-digit', month:'short', year:'numeric'});
+
+// Initialise MSAL (reads clientId/tenantId from config.js)
+initMsal();
+
+// Auto-load on page open – MSAL will pop a login window if needed
+loadData();
+
+// ── FALLBACK DATA (shown when SharePoint is unreachable or siteUrl not yet set) ──
+const FALLBACK_DATA = [
+  {_id:null,taskNo:'1',section:'Compliance',obligation:'General Obligations of AFS Licensee.',reference:'CA 912A / RG 104',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'2',section:'Compliance',obligation:'Prohibition on operating Managed Discretionary Accounts.',reference:'AFSL Condition',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'3',section:'Compliance',obligation:'Measure for Compliance.',reference:'RG 104 / AFSL Conditions / CA 912A(1)(b)(c)',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'4',section:'Compliance',obligation:'The AFS Licensee is responsible for compliance.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'5',section:'Compliance',obligation:'Review of Compliance Program.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'6',section:'Compliance',obligation:'Delegate director/senior manager to oversee compliance.',reference:'RG 104',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC + Denise + Board approval'},
+  {_id:null,taskNo:'7',section:'Compliance',obligation:'Adequate financial, technological and human resources.',reference:'RG 104 / CA 912A(1)(d)',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'8',section:'Compliance',obligation:'Comply with written notice from ASIC.',reference:'CA 912C',officer:'Director',frequency:'Ad hoc',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'9',section:'Compliance',obligation:'Not to engage in unconscionable conduct.',reference:'CA 991A / CCA Part 2.2',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'10',section:'Compliance',obligation:'Not to engage in unconscionable conduct in trade or commerce.',reference:'AA 12CB',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'11',section:'Compliance',obligation:'Not to engage in false or misleading representations.',reference:'AA 12BB / AA 12DB',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'12',section:'Compliance',obligation:'Not to engage in misleading or deceptive conduct.',reference:'AA 12DA',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'13',section:'Compliance',obligation:'Certain misleading conduct in relation to financial services.',reference:'AA 12DF',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'14',section:'Compliance',obligation:'Harassment and coercion.',reference:'AA 12DJ',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'15',section:'Compliance',obligation:'Not to enter into any anti-competitive agreements.',reference:'CCA Part 4, Division 2, s45',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'16',section:'Compliance',obligation:'Not to engage in cartel provisions.',reference:'CCA Part 4, Division 2, s45AD',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'17',section:'Compliance',obligation:'Not to engage in secondary boycotts.',reference:'CCA Part 4, Division 2, s45DA',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'18',section:'Compliance',obligation:'Compliance Audit.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'19',section:'AML/CTF',obligation:'Enrolment with AUSTRAC.',reference:'s51B / s51F AML/CTF Act',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-06-01',comments:'Enrol within 28 days of commencing designated services'},
+  {_id:null,taskNo:'20',section:'AML/CTF',obligation:'AML/CTF Compliance Officer.',reference:'AML/CTF Rules, Ch 8, Pt 8.5',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'Not required until July'},
+  {_id:null,taskNo:'21',section:'AML/CTF',obligation:'KYC Identification procedures.',reference:'AML/CTF Act Parts 2 and 10',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'22',section:'AML/CTF',obligation:'Employee due diligence (risk assessment).',reference:'AML/CTF Rules, Ch 8, Pt 8.3',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'23',section:'AML/CTF',obligation:'Employee due diligence (new employees).',reference:'AML/CTF Rules, Ch 8, Pt 8.3',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'24',section:'AML/CTF',obligation:'Training of employees in relation to AML/CTF.',reference:'AML/CTF Rules, Ch 8, Pt 8.2',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'Requires enhanced training for July adoption'},
+  {_id:null,taskNo:'25',section:'AML/CTF',obligation:'AML/CTF Compliance reports to AUSTRAC.',reference:'AML/CTF Part 3, Division 5',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2027-01-11',comments:'Scheduled post AFSL/AUSTRAC enrolment'},
+  {_id:null,taskNo:'26',section:'AML/CTF',obligation:'AML/CTF Program and record-keeping requirements.',reference:'AML/CTF Parts 7 and 10, Division 5',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'27',section:'AML/CTF',obligation:'Outsourcing – AML/CTF Obligations.',reference:'RG 104',officer:'Director',frequency:'Every two (2) years',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-01-11',comments:'Scheduled post AFSL/AUSTRAC enrolment'},
+  {_id:null,taskNo:'28',section:'AML/CTF',obligation:'Internal Review of AML/CTF Program.',reference:'AML/CTF Rules Part 8.4',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'29',section:'AML/CTF',obligation:'Independent Review of AML/CTF Program.',reference:'AML/CTF Rules Part 8.6',officer:'Director',frequency:'Every three (3) years',completed:'N/A',completionDate:'',reviewDate:'2027-03-31',comments:'Scheduled post AFSL/AUSTRAC enrolment'},
+  {_id:null,taskNo:'30',section:'AML/CTF',obligation:'Conduct Risk Assessment.',reference:'AML/CTF Rules, Ch 8, Pt 8.1',officer:'Director',frequency:'Every two (2) years',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-05-29',comments:'Scheduled post AFSL/AUSTRAC enrolment'},
+  {_id:null,taskNo:'31',section:'AML/CTF',obligation:'Ongoing customer due diligence.',reference:'AML/CTF Part 13, Division 7',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'32',section:'AML/CTF',obligation:'Transaction Monitoring.',reference:'AML/CTF Rules Chapter 15',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-27',comments:'PC Reviewed'},
+  {_id:null,taskNo:'33',section:'AML/CTF',obligation:'Suspicious matter, threshold and IFTI reporting (SMR/TTR/IFTI).',reference:'AML/CTF Part 3, Divisions 1–4, 6',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'34',section:'APRA',obligation:'Form 701 Reporting Requirements.',reference:'CR Part 7.6B',officer:'Director',frequency:'Biannually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'35',section:'Breaches',obligation:'Breaches Procedure.',reference:'CA 912A(1) / RG 78',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'PC Reviewed'},
+  {_id:null,taskNo:'36',section:'Breaches',obligation:'Retain records of compliance reports and breach notifications.',reference:'RG 104',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'37',section:'Breaches',obligation:'Investigate Breaches.',reference:'RG 78',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'38',section:'Breaches',obligation:'Reporting Breaches.',reference:'CA 912DAA / RG 78',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'39',section:'Conflicts of Interest',obligation:'Conflicts of Interest Procedure.',reference:'CA 912A(1)(aa) / RG 181',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'PC Reviewed'},
+  {_id:null,taskNo:'40',section:'Conflicts of Interest',obligation:'Managing Conflicts of Interest.',reference:'CA 912A(1)(aa) / RG 181',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'41',section:'Dispute Resolution',obligation:'Internal Dispute Resolution (IDR) system.',reference:'CA 912A(1)(g) / AS/NZS 10002:2014',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'PC Reviewed'},
+  {_id:null,taskNo:'42',section:'Dispute Resolution',obligation:'Complaints Management.',reference:'AS/NZS 10002:2014',officer:'Director',frequency:'Monthly',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-06-26',comments:'PC Reviewed'},
+  {_id:null,taskNo:'43',section:'Dispute Resolution',obligation:'Complaints Management Policy.',reference:'AS/NZS 10002:2014',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'Not applicable'},
+  {_id:null,taskNo:'44',section:'Dispute Resolution',obligation:'Complaints Register.',reference:'CA 912A(1)(g) / AS/NZS 10002:2014',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'Not applicable'},
+  {_id:null,taskNo:'45',section:'Cyber-Attack',obligation:'Preparation, mitigation, detection and response to cyber-attacks.',reference:'',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'Not applicable'},
+  {_id:null,taskNo:'46',section:'Risk Management',obligation:'Have adequate risk management systems.',reference:'CA 912A(1)(h) / RG 104',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'Not applicable'},
+  {_id:null,taskNo:'47',section:'Document Retention',obligation:'Retain records to demonstrate compliance.',reference:'RG 104 / RG 105 / AFSL Condition',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'48',section:'Document Retention',obligation:'Obligation to keep all financial records.',reference:'CA 286 / CA 988A-E',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'49',section:'Financial Resources',obligation:'Financial statements.',reference:'CA 989A-D / CA 308 / CA 319 / AFSL Condition',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'50',section:'Financial Resources',obligation:'Address financial resources not being adequate.',reference:'RG 104 / RG 166 / s912A(1)(d)(h)',officer:'Director',frequency:'Monthly',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'Not applicable'},
+  {_id:null,taskNo:'51',section:'Financial Resources',obligation:'Solvency, positive net assets and cash projections (12+ months).',reference:'RG 166 / AFSL Condition',officer:'Director',frequency:'Monthly',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'Not applicable'},
+  {_id:null,taskNo:'52',section:'Financial Resources',obligation:'Appointment of auditor.',reference:'CA 990B',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'',reviewDate:'2027-01-11',comments:'Not applicable'},
+  {_id:null,taskNo:'53',section:'Financial Resources',obligation:'Holding client money or property.',reference:'AFSL Condition',officer:'Director',frequency:'Monthly',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'Not applicable'},
+  {_id:null,taskNo:'54',section:'Financial Resources',obligation:'Review of Client Money Policy.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2027-07-01',comments:'Not applicable for this FY'},
+  {_id:null,taskNo:'55',section:'Financial Resources',obligation:'Reporting triggers and financial reporting conditions.',reference:'AFSL Condition',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'Not applicable'},
+  {_id:null,taskNo:'56',section:'Human Resources',obligation:'Adequate human resources.',reference:'RG 104',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'57',section:'Representatives',obligation:'Appointing Representatives.',reference:'RG 104 / CA 916A',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'58',section:'Representatives',obligation:'Maintain competence of Representatives.',reference:'RG 104 / RG 146',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'59',section:'Representatives',obligation:'Training of Representatives.',reference:'CA 912A(1)(f)',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Register and training program set up to track CPD'},
+  {_id:null,taskNo:'60',section:'Representatives',obligation:'Monitor and supervise the activities of Representatives.',reference:'RG 104.67 / RG 104.72 / CA 912A(1)(ca)',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'61',section:'Representatives',obligation:'Notification of changes to Representatives to ASIC.',reference:'RG 104',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'62',section:'Representatives',obligation:'Annual Review – Fit and Proper Persons.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2025-07-31',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'63',section:'Responsible Manager',obligation:'Organisational competence obligation.',reference:'RG 105',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2025-07-31',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'64',section:'Responsible Manager',obligation:'Advise ASIC of change in Responsible Manager.',reference:'RG 105',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'N/A until AFSL application submitted'},
+  {_id:null,taskNo:'65',section:'Responsible Manager',obligation:'Key person requirements.',reference:'AFSL Condition',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'No changes'},
+  {_id:null,taskNo:'66',section:'Training',obligation:'Training of CS Capital Partners representatives.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2025-07-31',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'67',section:'Training',obligation:'Training policy and procedures.',reference:'RG 146',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'PC Reviewed'},
+  {_id:null,taskNo:'68',section:'Outsourcing',obligation:'CS Capital Partners retains responsibility when services are outsourced.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'PC Reviewed'},
+  {_id:null,taskNo:'69',section:'Outsourcing',obligation:'Ongoing monitoring of service providers.',reference:'RG 104',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'70',section:'Outsourcing',obligation:'Review of service providers.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'71',section:'Information Technology',obligation:'Regularly review adequacy of IT systems.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'72',section:'Information Technology',obligation:'Disaster Recovery Plan.',reference:'RG 104',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'73',section:'Insider Trading',obligation:'Monitor all trading conducted by representatives.',reference:'CA 1043A/F/K',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'74',section:'Insider Trading',obligation:'Educate representatives regarding illegality of market manipulation.',reference:'CA 1041A-H',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'75',section:'Insider Trading',obligation:'Monitor all representatives for market manipulation.',reference:'CA 1041A-H',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'76',section:'Insider Trading',obligation:'Report all instances of market manipulation to ASIC immediately.',reference:'CA 1041A-H',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'77',section:'Insider Trading',obligation:'Company policies to prevent insider information affecting operations.',reference:'CA 1043A/F/K',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'PC Reviewed'},
+  {_id:null,taskNo:'78',section:'Marketing',obligation:'Review all advertising and marketing material.',reference:'CA 1018A',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'79',section:'Marketing',obligation:'AFSL number to appear on all financial service documents.',reference:'CA 912F',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'Not applicable to CS'},
+  {_id:null,taskNo:'80',section:'Marketing',obligation:'Restrictions on use of certain words and expressions.',reference:'CA 923B',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'81',section:'Marketing',obligation:'Not to engage in bait advertising.',reference:'AA 12DG',officer:'Director',frequency:'Quarterly',completed:'Yes',completionDate:'2026-04-13',reviewDate:'2026-07-15',comments:'PC Reviewed'},
+  {_id:null,taskNo:'82',section:'Marketing',obligation:'Not to engage in referral selling.',reference:'AA 12DH / CCA Part 3.1',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'83',section:'Marketing',obligation:'Not to engage in pyramid selling.',reference:'AA 12DK',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'84',section:'Marketing',obligation:'Not to misuse market power.',reference:'CCA Part 3.1, Division 3, s46',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'85',section:'Privacy',obligation:'Privacy Policy.',reference:'Privacy Act',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'PC Reviewed'},
+  {_id:null,taskNo:'86',section:'Privacy',obligation:'Australian Privacy Principles.',reference:'Australian Privacy Principles',officer:'Director',frequency:'Annually',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2027-03-31',comments:'PC Reviewed'},
+  {_id:null,taskNo:'87',section:'Company Secretary',obligation:'Notification to former representatives clients.',reference:'AFSL Condition',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'88',section:'Company Secretary',obligation:'Powers of Attorney.',reference:'CA 52A',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'89',section:'Company Secretary',obligation:'Business address.',reference:'CA 100',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'90',section:'Company Secretary',obligation:'Register of Members.',reference:'CA 169',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'91',section:'Company Secretary',obligation:'Indemnification and exemption of officer or auditor.',reference:'CA 199A',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'92',section:'Company Secretary',obligation:'Consent to act as Director.',reference:'CA 201D',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'93',section:'Company Secretary',obligation:'Appointment of Directors.',reference:'CA 201J',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'94',section:'Company Secretary',obligation:'Appointment of Director – notify ASIC within 28 days.',reference:'CA 201L',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'95',section:'Company Secretary',obligation:'Consent to act as Secretary.',reference:'CA 204C',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'96',section:'Company Secretary',obligation:'Notice of retirement or resignation of Director or Secretary.',reference:'CA 205A',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'97',section:'Company Secretary',obligation:'Notice of name and address of a Director and Secretary.',reference:'CA 205B',officer:'Director',frequency:'Ad hoc',completed:'Yes',completionDate:'2026-03-31',reviewDate:'2026-05-29',comments:'PC Reviewed'},
+  {_id:null,taskNo:'98',section:'Company Secretary',obligation:'Financial reports.',reference:'CA 292',officer:'Director',frequency:'Annually',completed:'N/A',completionDate:'',reviewDate:'2026-07-15',comments:'Review in next cycle'},
+  {_id:null,taskNo:'99',section:'Company Secretary',obligation:'Quarterly Return Form (ESVCLP – Luft).',reference:'VCA s15-10',officer:'Director',frequency:'Quarterly',completed:'',completionDate:'',reviewDate:'2026-07-01',comments:'Review in next cycle'},
+  {_id:null,taskNo:'100',section:'Company Secretary',obligation:'Annual Return Form (ESVCLP – Luft).',reference:'VCA s15-1',officer:'Director',frequency:'Annually',completed:'',completionDate:'',reviewDate:'2026-09-01',comments:'Review in next cycle'},
+  {_id:null,taskNo:'101',section:'Company Secretary',obligation:'Investments or disposals (ESVCLP).',reference:'VCA s15-15',officer:'Director',frequency:'Quarterly',completed:'',completionDate:'',reviewDate:'2026-07-01',comments:'Review in next cycle'},
+  {_id:null,taskNo:'102',section:'Company Secretary',obligation:'Responding to Industry Innovation Australia – information requested (VCA).',reference:'VCA s15-20',officer:'Director',frequency:'Ad hoc',completed:'',completionDate:'',reviewDate:'2026-05-29',comments:'Review in next cycle'},
+  {_id:null,taskNo:'103',section:'Company Secretary',obligation:'Repeated breaches in relation to holding ineligible investments.',reference:'VCA s9-3(1)(f)',officer:'Director',frequency:'Ad hoc',completed:'',completionDate:'',reviewDate:'2026-05-29',comments:'Review in next cycle'},
+];
+</script>
+</body>
+</html>
