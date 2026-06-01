@@ -430,6 +430,21 @@ async function getToken() {
   }
 }
 
+function renderEmpty() {
+  allItems = [];
+  filtered = [];
+  document.getElementById('s-total').textContent     = '–';
+  document.getElementById('s-completed').textContent = '–';
+  document.getElementById('s-pending').textContent   = '–';
+  document.getElementById('s-due').textContent       = '–';
+  for (let m = 0; m < 12; m++) document.getElementById('mc' + m).textContent = '–';
+  document.getElementById('tableBody').innerHTML =
+    '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted);font-size:13px">' +
+    'Sign in to view obligations</td></tr>';
+  document.getElementById('tableInfo').textContent = '';
+  document.getElementById('pager').innerHTML = '';
+}
+
 function updateUserUI() {
   const name = currentAccount ? (currentAccount.name || currentAccount.username) : '';
   document.getElementById('userName').textContent = name || 'Not signed in';
@@ -561,8 +576,7 @@ async function loadData() {
         : 'Could not reach SharePoint: ' + e.message + ' – showing local data.'
     );
     if (!notConfigured) toast('error', e.message);
-    populateSectionFilter(FALLBACK_DATA);
-    renderFromData(FALLBACK_DATA);
+    renderEmpty();
   }
 
   btn.classList.remove('spinning');
@@ -823,15 +837,13 @@ if (!msalInstance) {
         updateUserUI();
         loadData();
       } else {
-        setConnBar('warn', 'Click <strong>Sign In</strong> (top right) to connect to SharePoint.');
-        populateSectionFilter(FALLBACK_DATA);
-        renderFromData(FALLBACK_DATA);
+        setConnBar('warn', 'Click <strong>Sign In</strong> (top right) to load obligations from SharePoint.');
+        renderEmpty();
       }
     })
     .catch(e => {
       setConnBar('err', '⚠ Auth error: ' + e.message);
-      populateSectionFilter(FALLBACK_DATA);
-      renderFromData(FALLBACK_DATA);
+      renderEmpty();
     });
 }
 
