@@ -19,17 +19,17 @@ const CONFIG = {
   // These match the columns created by setup-sharepoint-list.ps1.
   // Only change if you created columns manually with different names.
   fields: {
-    taskNo:         'Title',
-    entity:         'Entity',
-    section:        'Section',
-    obligation:     'ComplianceObligation',
-    reference:      'Reference',
-    action:         'ComplianceAction',
-    officer:        'Officer',
-    frequency:      'Frequency',
-    completed:      'CompletedStatus',
-    completionDate: 'CompletionDate',
-    reviewDate:     'ReviewDate',
-    comments:       'Comments',
+    taskNo:         'Title',              // "Title"
+    entity:         'Entity',             // "Entity"
+    section:        'field_1',            // "SECTION"
+    obligation:     'field_2',            // "COMPLIANCE OBLIGATION"
+    reference:      'field_3',            // "REFERENCE"
+    action:         'field_5',            // "COMPLIANCE ACTION"
+    officer:        'field_6',            // "RESPONSIBLE OFFICER"
+    frequency:      'field_7',            // "FREQUENCY"
+    completed:      'field_20',           // "COMPLETED"
+    completionDate: 'field_21',           // "COMPLETION DATE"
+    reviewDate:     'UpcomingReviewDate', // "UPCOMING REVIEW DATE"
+    comments:       'COMMENTS',           // "COMMENTS"
   },
 };
