@@ -389,21 +389,38 @@ const SP_SCOPES = () => [spRoot() + '/AllSites.Write'];
 
 function initMsal() {
   if (!CONFIG.clientId || CONFIG.clientId === 'YOUR_CLIENT_ID') return;
-  msalInstance = new msal.PublicClientApplication({
-    auth: {
-      clientId:    CONFIG.clientId,
-      authority:   'https://login.microsoftonline.com/' + CONFIG.tenantId,
-      redirectUri: window.location.href.split('?')[0].split('#')[0],
-    },
-    cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: true },
-  });
-  // Handle any redirect response in the URL
-  msalInstance.handleRedirectPromise().then(resp => {
-    if (resp) { currentAccount = resp.account; updateUserUI(); }
-  }).catch(() => {});
-  // Restore existing session
-  const accounts = msalInstance.getAllAccounts();
-  if (accounts.length > 0) { currentAccount = accounts[0]; updateUserUI(); }
+
+  // Check the MSAL library loaded from CDN
+  if (typeof msal === 'undefined') {
+    setConnBar('err', '⚠ MSAL library failed to load from CDN. Check your internet connection and try refreshing.');
+    return;
+  }
+
+  try {
+    msalInstance = new msal.PublicClientApplication({
+      auth: {
+        clientId:    CONFIG.clientId,
+        authority:   'https://login.microsoftonline.com/' + CONFIG.tenantId,
+        redirectUri: window.location.href.split('?')[0].split('#')[0],
+      },
+      cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: true },
+    });
+
+    // Handle any redirect response in the URL
+    msalInstance.handleRedirectPromise().then(resp => {
+      if (resp) { currentAccount = resp.account; updateUserUI(); }
+    }).catch(e => {
+      setConnBar('err', '⚠ Azure AD redirect error: ' + e.message);
+    });
+
+    // Restore existing session
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) { currentAccount = accounts[0]; updateUserUI(); }
+
+  } catch (e) {
+    msalInstance = null;
+    setConnBar('err', '⚠ Azure AD failed to initialise: ' + e.message);
+  }
 }
 
 async function getToken() {
