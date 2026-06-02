@@ -133,7 +133,7 @@ Rules:
 
     client = anthropic.Anthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
 
-    print(f"Calling Claude with web search (window: {date_from} → {date_to})…")
+    print(f"Calling Claude with web search (window: {date_from} to {date_to})...")
     message = client.messages.create(
         model='claude-opus-4-5',
         max_tokens=4096,
