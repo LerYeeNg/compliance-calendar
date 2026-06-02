@@ -211,7 +211,12 @@ tr.row-urgent:hover td{background:#ffefd4}
     <div class="month-cell" data-month="11" onclick="filterMonth(11)"><div class="mc-name">Dec</div><div class="mc-count" id="mc11">–</div></div>
   </div>
 
-  <div class="section-title">All Obligations</div>
+  <div class="section-title">All Obligations
+    <button class="btn-act" style="background:var(--green);font-size:11px;padding:4px 12px;margin-left:4px" onclick="openAdd()">
+      <svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Obligation
+    </button>
+  </div>
   <div class="filters">
     <label>Search<input type="text" id="fSearch" placeholder="Task, obligation, reference…" oninput="applyFilters()"></label>
     <label>Section<select id="fSection" onchange="applyFilters()"><option value="">All sections</option></select></label>
@@ -324,6 +329,90 @@ tr.row-urgent:hover td{background:#ffefd4}
       <span class="saving-indicator hidden" id="savingIndicator">Saving to SharePoint…</span>
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-save" id="btnSave" onclick="saveItem()">Save to SharePoint</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Obligation Modal -->
+<div class="modal-overlay hidden" id="addModalOverlay" onclick="closeAddModalOnBg(event)">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header" style="background:var(--green)">
+      <h3>Add New Obligation</h3>
+      <button class="modal-close" onclick="closeAddModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Task No *</label>
+          <input type="text" id="aTaskNo" placeholder="e.g. 104">
+        </div>
+        <div class="form-group">
+          <label>Entity</label>
+          <input type="text" id="aEntity" placeholder="e.g. CS Capital Partners">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Section *</label>
+          <input type="text" id="aSection" placeholder="e.g. Compliance">
+        </div>
+        <div class="form-group">
+          <label>Frequency</label>
+          <select id="aFrequency">
+            <option value="">— Select —</option>
+            <option>Monthly</option>
+            <option>Quarterly</option>
+            <option>Biannually</option>
+            <option>Annually</option>
+            <option>Ad hoc</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Compliance Obligation *</label>
+        <textarea id="aObligation" placeholder="Describe the obligation…" style="min-height:70px"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Reference</label>
+        <input type="text" id="aReference" placeholder="e.g. CA 912A / RG 104">
+      </div>
+      <div class="form-group">
+        <label>Compliance Action</label>
+        <textarea id="aAction" placeholder="Steps required to meet this obligation…" style="min-height:55px"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Responsible Officer</label>
+          <input type="text" id="aOfficer" placeholder="e.g. Director">
+        </div>
+        <div class="form-group">
+          <label>Completed Status</label>
+          <select id="aCompleted">
+            <option value="">— Pending —</option>
+            <option value="Yes">&#10003; Yes – Completed</option>
+            <option value="N/A">N/A – Not Applicable</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Completion Date</label>
+          <input type="date" id="aCompletionDate">
+        </div>
+        <div class="form-group">
+          <label>Next Review Date</label>
+          <input type="date" id="aReviewDate">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Comments</label>
+        <textarea id="aComments" placeholder="Notes, evidence links…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span class="saving-indicator hidden" id="addSavingIndicator">Saving to SharePoint…</span>
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-save" id="btnAddSave" onclick="saveNewItem()" style="background:var(--green)">Add to SharePoint</button>
     </div>
   </div>
 </div>
@@ -483,6 +572,80 @@ async function spPatch(itemId, fields) {
     }
   );
   if (!r.ok) throw new Error('Save failed (' + r.status + ') – ' + (await r.text()));
+}
+
+async function spPost(fields) {
+  const token  = await getToken();
+  const digest = await getDigest();
+  const r = await fetch(
+    apiBase() + "/web/lists/getbytitle('" + encodeURIComponent(CONFIG.listName) + "')/items",
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json;odata=nometadata',
+        'Content-Type': 'application/json;odata=nometadata',
+        'X-RequestDigest': digest,
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify(fields),
+    }
+  );
+  if (!r.ok) throw new Error('Create failed (' + r.status + ') – ' + (await r.text()));
+  return r.json();
+}
+
+// ── ADD OBLIGATION ──────────────────────────────────────
+function openAdd() {
+  // Clear all fields
+  ['aTaskNo','aEntity','aSection','aReference','aOfficer','aCompletionDate','aReviewDate','aComments'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  ['aObligation','aAction'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('aFrequency').value = '';
+  document.getElementById('aCompleted').value = '';
+  document.getElementById('addModalOverlay').classList.remove('hidden');
+}
+
+function closeAddModal() { document.getElementById('addModalOverlay').classList.add('hidden'); }
+function closeAddModalOnBg(e) { if (e.target.id === 'addModalOverlay') closeAddModal(); }
+
+async function saveNewItem() {
+  const f = CONFIG.fields;
+  const taskNo = document.getElementById('aTaskNo').value.trim();
+  const obligation = document.getElementById('aObligation').value.trim();
+  if (!taskNo)      { toast('error', 'Task No is required.'); return; }
+  if (!obligation)  { toast('error', 'Compliance Obligation is required.'); return; }
+
+  const btn = document.getElementById('btnAddSave');
+  const ind = document.getElementById('addSavingIndicator');
+  btn.disabled = true; ind.classList.remove('hidden');
+
+  const compDateVal   = document.getElementById('aCompletionDate').value;
+  const reviewDateVal = document.getElementById('aReviewDate').value;
+
+  try {
+    const newItem = await spPost({
+      [f.taskNo]:         taskNo,
+      [f.entity]:         document.getElementById('aEntity').value.trim()      || null,
+      [f.section]:        document.getElementById('aSection').value.trim()      || null,
+      [f.obligation]:     obligation,
+      [f.reference]:      document.getElementById('aReference').value.trim()    || null,
+      [f.action]:         document.getElementById('aAction').value.trim()       || null,
+      [f.officer]:        document.getElementById('aOfficer').value.trim()      || null,
+      [f.frequency]:      document.getElementById('aFrequency').value           || null,
+      [f.completed]:      document.getElementById('aCompleted').value           || null,
+      [f.completionDate]: compDateVal   ? compDateVal   + 'T00:00:00Z' : null,
+      [f.reviewDate]:     reviewDateVal ? reviewDateVal + 'T00:00:00Z' : null,
+      [f.comments]:       document.getElementById('aComments').value.trim()     || null,
+    });
+    toast('success', 'Task #' + taskNo + ' added to SharePoint ✓');
+    closeAddModal();
+    loadData(); // Refresh table to show new row
+  } catch (e) {
+    toast('error', 'Add failed: ' + e.message);
+  }
+
+  btn.disabled = false; ind.classList.add('hidden');
 }
 
 // ── LOAD DATA ──────────────────────────────────────────
