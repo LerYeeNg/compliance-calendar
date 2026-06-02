@@ -294,11 +294,65 @@ tr.row-urgent:hover td{background:#ffefd4}
       <button class="modal-close" onclick="closeModal()">&times;</button>
     </div>
     <div class="modal-body">
-      <div class="info-row"><div class="lbl">Obligation</div><div class="val" id="mObligation">–</div></div>
-      <div class="info-row"><div class="lbl">Reference</div><div class="val" id="mReference">–</div></div>
-      <div class="form-group" style="margin-bottom:16px">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Task No</label>
+          <input type="text" id="mTaskNo" readonly style="background:#f4f6fa;color:var(--muted);cursor:default">
+        </div>
+        <div class="form-group">
+          <label>Entity</label>
+          <input type="text" id="mEntity" placeholder="e.g. CS Capital Partners">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Section</label>
+          <input type="text" id="mSection" placeholder="e.g. Compliance">
+        </div>
+        <div class="form-group">
+          <label>Frequency</label>
+          <select id="mFrequency">
+            <option value="">— Select —</option>
+            <option>Monthly</option>
+            <option>Quarterly</option>
+            <option>Biannually</option>
+            <option>Annually</option>
+            <option>Ad hoc</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Obligation Due Date by Month</label>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px 8px;padding:8px 10px;background:#f4f6fa;border:1px solid var(--border);border-radius:6px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="0"> Jan</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="1"> Feb</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="2"> Mar</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="3"> Apr</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="4"> May</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="5"> Jun</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="6"> Jul</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="7"> Aug</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="8"> Sep</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="9"> Oct</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="10"> Nov</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb-edit" data-m="11"> Dec</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Compliance Obligation</label>
+        <textarea id="mObligation" placeholder="Describe the obligation…" style="min-height:70px"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Reference</label>
+        <input type="text" id="mReference" placeholder="e.g. CA 912A / RG 104">
+      </div>
+      <div class="form-group">
+        <label>Compliance Action</label>
+        <textarea id="mAction" placeholder="Steps required to meet this obligation…" style="min-height:55px"></textarea>
+      </div>
+      <div class="form-group">
         <label>Requirements to Maintain Compliance</label>
-        <textarea id="mRequirements" placeholder="Steps or conditions required to maintain this obligation…"></textarea>
+        <textarea id="mRequirements" placeholder="Ongoing conditions or controls required to stay compliant…" style="min-height:55px"></textarea>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -726,12 +780,14 @@ async function loadData() {
       obligation:     item[f.obligation]     || '',
       reference:      item[f.reference]      || '',
       requirements:   item[f.requirements]   || '',
+      action:         item[f.action]         || '',
       officer:        item[f.officer]        || '',
       frequency:      item[f.frequency]      || '',
       completed:      item[f.completed]      || '',
       completionDate: spDate(item[f.completionDate]),
       reviewDate:     spDate(item[f.reviewDate]),
       comments:       item[f.comments]       || '',
+      months:         (f.months || []).map(mf => item[mf] ? 'Yes' : ''),
     }));
 
     setConnBar('ok',
@@ -761,14 +817,27 @@ async function loadData() {
 function openEdit(encoded) {
   editingItem = JSON.parse(decodeURIComponent(encoded));
   document.getElementById('modalTitle').textContent = 'Task #' + editingItem.taskNo + ' – ' + editingItem.section;
-  document.getElementById('mObligation').textContent  = editingItem.obligation   || '—';
-  document.getElementById('mReference').textContent   = editingItem.reference    || '—';
-  document.getElementById('mRequirements').value      = editingItem.requirements || '';
-  document.getElementById('mCompleted').value         = editingItem.completed    || '';
-  document.getElementById('mOfficer').value          = editingItem.officer    || '';
-  document.getElementById('mCompletionDate').value   = editingItem.completionDate || '';
-  document.getElementById('mReviewDate').value       = editingItem.reviewDate    || '';
-  document.getElementById('mComments').value         = editingItem.comments   || '';
+  // Identity
+  document.getElementById('mTaskNo').value        = editingItem.taskNo      || '';
+  document.getElementById('mEntity').value        = editingItem.entity      || '';
+  document.getElementById('mSection').value       = editingItem.section     || '';
+  document.getElementById('mFrequency').value     = editingItem.frequency   || '';
+  // Month checkboxes
+  const months = editingItem.months || [];
+  document.querySelectorAll('.month-cb-edit').forEach(cb => {
+    cb.checked = months[parseInt(cb.dataset.m)] === 'Yes';
+  });
+  // Text fields
+  document.getElementById('mObligation').value   = editingItem.obligation   || '';
+  document.getElementById('mReference').value    = editingItem.reference    || '';
+  document.getElementById('mAction').value       = editingItem.action       || '';
+  document.getElementById('mRequirements').value = editingItem.requirements || '';
+  // Status & dates
+  document.getElementById('mCompleted').value      = editingItem.completed      || '';
+  document.getElementById('mOfficer').value        = editingItem.officer        || '';
+  document.getElementById('mCompletionDate').value = editingItem.completionDate || '';
+  document.getElementById('mReviewDate').value     = editingItem.reviewDate     || '';
+  document.getElementById('mComments').value       = editingItem.comments       || '';
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
 
@@ -779,22 +848,40 @@ async function saveItem() {
   if (!editingItem) return;
   const f = CONFIG.fields;
 
+  const entityVal       = document.getElementById('mEntity').value;
+  const sectionVal      = document.getElementById('mSection').value;
+  const frequencyVal    = document.getElementById('mFrequency').value;
+  const obligationVal   = document.getElementById('mObligation').value;
+  const referenceVal    = document.getElementById('mReference').value;
+  const actionVal       = document.getElementById('mAction').value;
+  const requirementsVal = document.getElementById('mRequirements').value;
   const completedVal    = document.getElementById('mCompleted').value;
   const officerVal      = document.getElementById('mOfficer').value;
   const compDateVal     = document.getElementById('mCompletionDate').value;
   const reviewDateVal   = document.getElementById('mReviewDate').value;
   const commentsVal     = document.getElementById('mComments').value;
-  const requirementsVal = document.getElementById('mRequirements').value;
 
-  // Optimistic local update so the table reflects the change immediately
-  editingItem.completed      = completedVal;
-  editingItem.officer        = officerVal;
+  // Month checkboxes
+  const monthFields = {};
+  document.querySelectorAll('.month-cb-edit').forEach(cb => {
+    monthFields[f.months[parseInt(cb.dataset.m)]] = cb.checked ? 'Yes' : null;
+  });
+
+  // Optimistic local update
+  editingItem.entity        = entityVal;
+  editingItem.section       = sectionVal;
+  editingItem.frequency     = frequencyVal;
+  editingItem.obligation    = obligationVal;
+  editingItem.reference     = referenceVal;
+  editingItem.action        = actionVal;
+  editingItem.requirements  = requirementsVal;
+  editingItem.completed     = completedVal;
+  editingItem.officer       = officerVal;
   editingItem.completionDate = compDateVal;
-  editingItem.reviewDate     = reviewDateVal;
-  editingItem.comments       = commentsVal;
-  editingItem.requirements   = requirementsVal;
+  editingItem.reviewDate    = reviewDateVal;
+  editingItem.comments      = commentsVal;
 
-  // If no SharePoint item ID (e.g. using fallback data), save locally only
+  // If no SharePoint item ID, save locally only
   if (!editingItem._id) {
     toast('info', 'Saved locally (connect to SharePoint to persist).');
     closeModal(); applyFilters(); return;
@@ -806,12 +893,19 @@ async function saveItem() {
 
   try {
     await spPatch(editingItem._id, {
+      [f.entity]:         entityVal       || null,
+      [f.section]:        sectionVal      || null,
+      [f.frequency]:      frequencyVal    || null,
+      [f.obligation]:     obligationVal   || null,
+      [f.reference]:      referenceVal    || null,
+      [f.action]:         actionVal       || null,
+      [f.requirements]:   requirementsVal || null,
       [f.completed]:      completedVal    || null,
       [f.officer]:        officerVal      || null,
       [f.completionDate]: compDateVal     ? compDateVal   + 'T00:00:00Z' : null,
       [f.reviewDate]:     reviewDateVal   ? reviewDateVal + 'T00:00:00Z' : null,
       [f.comments]:       commentsVal     || null,
-      [f.requirements]:   requirementsVal || null,
+      ...monthFields,
     });
     toast('success', 'Task #' + editingItem.taskNo + ' saved to SharePoint ✓');
     closeModal(); applyFilters();
