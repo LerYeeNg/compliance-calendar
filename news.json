@@ -7,28 +7,33 @@
       "items": [
         {
           "badge": "deadline",
-          "title": "Design & Distribution Obligations – Product Review Due by 30 Jun 2026",
-          "desc": "TMD reviews must occur by the earlier of 5 years from issue or next scheduled review date. Confirm all TMDs are current. (CA 994B)"
-        },
-        {
-          "badge": "change",
-          "title": "Breach Reporting – Hard 30-Day Deadline Continues",
-          "desc": "No extensions under CA 912DAA / RG 78. Clock starts from knowledge of or recklessness as to the breach. Maintain Breaches Register."
-        },
-        {
-          "badge": "deadline",
-          "title": "FS70 / FS71 Audit Lodgement – 31 Oct 2026",
-          "desc": "Annual financial statements and audit report due within 4 months of 30 June FY close. Engage auditor early. (CA 989A–D)"
-        },
-        {
-          "badge": "new",
-          "title": "ASIC Industry Funding Levy Invoices – Due Aug/Sep 2026",
-          "desc": "ASIC will issue 2025-26 industry funding levy invoices. Budget for payment within 30 business days of invoice. (ASIC Supervisory Cost Recovery Levy Act)"
+          "title": "Sustainability Reporting Season – 30 Jun 2026",
+          "desc": "ASIC flagged six recurring compliance gaps in early mandatory climate reports. June 30, 2026 reporting season deadline applies to Group 2 entities. Ensure compliance with AASB S2 and Chapter 2M of the Corporations Act 2001."
         },
         {
           "badge": "watch",
-          "title": "RG 97 Fee & Cost Disclosure Review – ASIC Consultation H2 2026",
-          "desc": "ASIC flagged potential updates to fee/cost disclosure in PDSs. Monitor for consultation paper and assess impact on fund documents."
+          "title": "ASIC 2026 Enforcement Priorities – Private Credit Focus",
+          "desc": "ASIC added private credit practices, financial reporting misconduct, insurance claims handling and misleading pricing to 2026 enforcement priorities. Doubled investigations and nearly doubled court cases vs prior year."
+        },
+        {
+          "badge": "new",
+          "title": "Digital Assets Framework Act – Royal Assent 8 Apr 2026",
+          "desc": "Corporations Amendment (Digital Assets Framework) Act 2026 received Royal Assent. ASIC roadmap: registration for digital asset/tokenised custody platforms from Apr 2027, full compliance by Oct 2027."
+        },
+        {
+          "badge": "change",
+          "title": "FFSP AFSL Exemptions Commence – 8 Apr 2027",
+          "desc": "Parliament passed new AFSL exemptions for foreign financial services providers. Transitional relief extended to 31 Mar 2027. New regime commences 8 Apr 2027 with clearer eligibility thresholds and compliance obligations."
+        },
+        {
+          "badge": "watch",
+          "title": "Whistleblower Programs Under Increased Scrutiny",
+          "desc": "ASIC Report 827 found 30% of companies don't regularly review whistleblower program effectiveness. ASIC will directly contact companies with inadequate practices and increase monitoring through 2026."
+        },
+        {
+          "badge": "deadline",
+          "title": "CSLR Levy Notice Payment – 4 Jun 2026",
+          "desc": "Compensation scheme of last resort (CSLR) levy notice now available. Payment due by Thursday 4 June 2026 to avoid penalties. All in-scope AFSL holders must pay."
         }
       ]
     },
@@ -38,28 +43,33 @@
       "items": [
         {
           "badge": "deadline",
-          "title": "Tranche 2 Enrolment – Deadline 29 Jul 2026",
-          "desc": "Lawyers, accountants, real estate agents newly regulated from 1 Jul 2026. Update counterparty CDD procedures if dealing with these sectors. (s51B AML/CTF Act)"
-        },
-        {
-          "badge": "new",
-          "title": "Travel Rule – Virtual Asset Transfers Live 1 Jul 2026",
-          "desc": "VASPs must exchange originator/beneficiary information on transfers ≥$1,000 AUD. Assess whether any fund crypto holdings trigger obligations."
-        },
-        {
-          "badge": "change",
-          "title": "Enhanced Ongoing CDD – Now In Effect (since 31 Mar 2026)",
-          "desc": "Heightened ongoing CDD obligations are live. Ensure transaction monitoring rules and staff training reflect the new standard."
+          "title": "AML/CTF Officer Notification – 30 May 2026",
+          "desc": "Existing reporting entities enrolled before 31 Mar 2026 must notify AUSTRAC of their AML/CTF compliance officer by 30 May 2026 under the Transitional Rules 2026."
         },
         {
           "badge": "deadline",
-          "title": "AML/CTF Compliance Report – 31 Aug 2026",
-          "desc": "Annual compliance report due to AUSTRAC Board or senior officer. Document findings and remediation actions. (AML/CTF Rules Ch 8.7)"
+          "title": "Tranche 2 Entities Obligations Commence – 1 Jul 2026",
+          "desc": "AML/CTF obligations commence for lawyers, accountants, real estate agents and jewellers. Must enrol with AUSTRAC by 29 Jul 2026. Requires documented AML/CTF program, CDD and suspicious matter reporting."
+        },
+        {
+          "badge": "change",
+          "title": "Unified AML/CTF Program Required – 31 Mar 2026",
+          "desc": "Part A/Part B distinction removed. Existing reporting entities must implement unified, outcomes-focused AML/CTF program linking risk assessments to controls. Travel rule obligations also now apply."
+        },
+        {
+          "badge": "new",
+          "title": "AUSTRAC 2026 Risk Snapshots Released – 12 May 2026",
+          "desc": "AUSTRAC released updated ML/TF/PF risk snapshots. Key focus: AI-enabled financial crime, virtual assets, near-instant settlement risks. Use as input for risk assessment updates."
         },
         {
           "badge": "watch",
-          "title": "Beneficial Ownership Register – Expected Late 2026",
-          "desc": "Treasury consulting on central BO register. Monitor for draft legislation and prepare to update verification procedures."
+          "title": "FATF Mutual Evaluation – 2026",
+          "desc": "Australia's next Financial Action Task Force mutual evaluation is scheduled for 2026. Will assess implementation and effectiveness of AML/CTF measures, including new Tranche 2 reforms."
+        },
+        {
+          "badge": "deadline",
+          "title": "Annual Compliance Reporting Moves to Financial Year – FY2026-27",
+          "desc": "Compliance reporting period changing to 1 Jul – 30 Jun. First report due for FY2026-27 period. Submit within 3 months (by 30 Sep 2027). AFSL holders providing designated services must lodge."
         }
       ]
     },
@@ -69,28 +79,33 @@
       "items": [
         {
           "badge": "new",
-          "title": "AER Fully Independent from ACCC – Effective 1 Jul 2026",
-          "desc": "AER becomes a standalone regulator. Check for updated portals, contact details, and any revised reporting templates."
-        },
-        {
-          "badge": "new",
-          "title": "Enhanced Concession Disclosure – Retail Code Commences 1 Jul 2026",
-          "desc": "Retailers must provide more frequent concession/rebate info to customers. Update systems if portfolio holds retail authorisations."
+          "title": "AER Separates from ACCC – 1 Jul 2026",
+          "desc": "Competition and Consumer Amendment (Australian Energy Regulator Separation) Act 2025 takes effect. AER becomes standalone Commonwealth entity with own staffing and budgetary autonomy."
         },
         {
           "badge": "deadline",
-          "title": "Half-Yearly Breach Reports – Due 31 Aug 2026",
-          "desc": "AER-regulated entities submit compliance/breach reports by 28 Feb and 31 Aug. Collate H1 2026 data now."
+          "title": "2026-27 Network Charges Approved – May 2026",
+          "desc": "AER published approved electricity distributors' annual pricing proposals for ACT, NSW, NT, QLD, SA, TAS for 2026-27. Network charges mostly increasing due to transmission costs and inflation."
+        },
+        {
+          "badge": "change",
+          "title": "Electricity Retail Code Obligations – 1 Jul 2026",
+          "desc": "AER and ACCC joint compliance bulletin issued. Retailers must comply with new Electricity Retail Code obligations effective 1 July 2026. Enhanced reporting on concessions and rebates required."
         },
         {
           "badge": "watch",
-          "title": "Hardship Pricing Controls Assurance – Dec 2026 Audits",
-          "desc": "Hardship customers must pay no more than the 'deemed better offer'. AER assurance audits expected from late 2026."
+          "title": "Rate of Return Instrument Review – Final Dec 2026",
+          "desc": "AER's 2026 RORI review underway. Eligible Experts' report released. Final decision expected December 2026. Will affect allowed returns for regulated electricity and gas networks."
+        },
+        {
+          "badge": "change",
+          "title": "Hardship Customer Better Offer Rule – Dec 2026",
+          "desc": "From December 2026, hardship customers must pay no more than their deemed better offer where available. Compliance audits will test retailer controls for this requirement."
         },
         {
           "badge": "watch",
-          "title": "Consumer Data Right (Energy) Expansion – Watch H2 2026",
-          "desc": "CDR for energy may extend to additional product classes. Monitor Treasury/AER announcements for compliance impacts."
+          "title": "$15.9M Budget for NEM Reforms Implementation",
+          "desc": "2026-27 Federal Budget allocated $15.9 million over four years for AER to implement National Electricity Market review recommendations. Enhanced regulatory focus on wholesale market settings."
         }
       ]
     }
