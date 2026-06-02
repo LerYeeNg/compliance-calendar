@@ -24,6 +24,7 @@ const CONFIG = {
     section:        'field_1',            // "SECTION"
     obligation:     'field_2',            // "COMPLIANCE OBLIGATION"
     reference:      'field_3',            // "REFERENCE"
+    requirements:   'field_4',            // "REQUIREMENTS TO MAINTAIN COMPLIANCE"
     action:         'field_5',            // "COMPLIANCE ACTION"
     officer:        'field_6',            // "RESPONSIBLE OFFICER"
     frequency:      'field_7',            // "FREQUENCY"

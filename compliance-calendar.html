@@ -295,7 +295,11 @@ tr.row-urgent:hover td{background:#ffefd4}
     </div>
     <div class="modal-body">
       <div class="info-row"><div class="lbl">Obligation</div><div class="val" id="mObligation">–</div></div>
-      <div class="info-row" style="margin-bottom:20px"><div class="lbl">Reference</div><div class="val" id="mReference">–</div></div>
+      <div class="info-row"><div class="lbl">Reference</div><div class="val" id="mReference">–</div></div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Requirements to Maintain Compliance</label>
+        <textarea id="mRequirements" placeholder="Steps or conditions required to maintain this obligation…"></textarea>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label>Completed Status</label>
@@ -396,6 +400,10 @@ tr.row-urgent:hover td{background:#ffefd4}
       <div class="form-group">
         <label>Compliance Action</label>
         <textarea id="aAction" placeholder="Steps required to meet this obligation…" style="min-height:55px"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Requirements to Maintain Compliance</label>
+        <textarea id="aRequirements" placeholder="Ongoing conditions or controls required to stay compliant…" style="min-height:55px"></textarea>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -623,7 +631,7 @@ function openAdd() {
   ['aEntity','aSection','aReference','aOfficer','aCompletionDate','aReviewDate','aComments'].forEach(id => {
     document.getElementById(id).value = '';
   });
-  ['aObligation','aAction'].forEach(id => { document.getElementById(id).value = ''; });
+  ['aObligation','aAction','aRequirements'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('aFrequency').value = '';
   document.getElementById('aCompleted').value = '';
   document.querySelectorAll('.month-cb').forEach(cb => cb.checked = false);
@@ -660,7 +668,8 @@ async function saveNewItem() {
       [f.section]:        document.getElementById('aSection').value.trim()      || null,
       [f.obligation]:     obligation,
       [f.reference]:      document.getElementById('aReference').value.trim()    || null,
-      [f.action]:         document.getElementById('aAction').value.trim()       || null,
+      [f.action]:         document.getElementById('aAction').value.trim()        || null,
+      [f.requirements]:   document.getElementById('aRequirements').value.trim() || null,
       [f.officer]:        document.getElementById('aOfficer').value.trim()      || null,
       [f.frequency]:      document.getElementById('aFrequency').value           || null,
       [f.completed]:      document.getElementById('aCompleted').value           || null,
@@ -716,6 +725,7 @@ async function loadData() {
       section:        item[f.section]        || '',
       obligation:     item[f.obligation]     || '',
       reference:      item[f.reference]      || '',
+      requirements:   item[f.requirements]   || '',
       officer:        item[f.officer]        || '',
       frequency:      item[f.frequency]      || '',
       completed:      item[f.completed]      || '',
@@ -751,9 +761,10 @@ async function loadData() {
 function openEdit(encoded) {
   editingItem = JSON.parse(decodeURIComponent(encoded));
   document.getElementById('modalTitle').textContent = 'Task #' + editingItem.taskNo + ' – ' + editingItem.section;
-  document.getElementById('mObligation').textContent = editingItem.obligation || '—';
-  document.getElementById('mReference').textContent  = editingItem.reference  || '—';
-  document.getElementById('mCompleted').value        = editingItem.completed  || '';
+  document.getElementById('mObligation').textContent  = editingItem.obligation   || '—';
+  document.getElementById('mReference').textContent   = editingItem.reference    || '—';
+  document.getElementById('mRequirements').value      = editingItem.requirements || '';
+  document.getElementById('mCompleted').value         = editingItem.completed    || '';
   document.getElementById('mOfficer').value          = editingItem.officer    || '';
   document.getElementById('mCompletionDate').value   = editingItem.completionDate || '';
   document.getElementById('mReviewDate').value       = editingItem.reviewDate    || '';
@@ -768,11 +779,12 @@ async function saveItem() {
   if (!editingItem) return;
   const f = CONFIG.fields;
 
-  const completedVal  = document.getElementById('mCompleted').value;
-  const officerVal    = document.getElementById('mOfficer').value;
-  const compDateVal   = document.getElementById('mCompletionDate').value;
-  const reviewDateVal = document.getElementById('mReviewDate').value;
-  const commentsVal   = document.getElementById('mComments').value;
+  const completedVal    = document.getElementById('mCompleted').value;
+  const officerVal      = document.getElementById('mOfficer').value;
+  const compDateVal     = document.getElementById('mCompletionDate').value;
+  const reviewDateVal   = document.getElementById('mReviewDate').value;
+  const commentsVal     = document.getElementById('mComments').value;
+  const requirementsVal = document.getElementById('mRequirements').value;
 
   // Optimistic local update so the table reflects the change immediately
   editingItem.completed      = completedVal;
@@ -780,6 +792,7 @@ async function saveItem() {
   editingItem.completionDate = compDateVal;
   editingItem.reviewDate     = reviewDateVal;
   editingItem.comments       = commentsVal;
+  editingItem.requirements   = requirementsVal;
 
   // If no SharePoint item ID (e.g. using fallback data), save locally only
   if (!editingItem._id) {
@@ -793,11 +806,12 @@ async function saveItem() {
 
   try {
     await spPatch(editingItem._id, {
-      [f.completed]:      completedVal  || null,
-      [f.officer]:        officerVal    || null,
-      [f.completionDate]: compDateVal   ? compDateVal  + 'T00:00:00Z' : null,
-      [f.reviewDate]:     reviewDateVal ? reviewDateVal + 'T00:00:00Z' : null,
-      [f.comments]:       commentsVal   || null,
+      [f.completed]:      completedVal    || null,
+      [f.officer]:        officerVal      || null,
+      [f.completionDate]: compDateVal     ? compDateVal   + 'T00:00:00Z' : null,
+      [f.reviewDate]:     reviewDateVal   ? reviewDateVal + 'T00:00:00Z' : null,
+      [f.comments]:       commentsVal     || null,
+      [f.requirements]:   requirementsVal || null,
     });
     toast('success', 'Task #' + editingItem.taskNo + ' saved to SharePoint ✓');
     closeModal(); applyFilters();
