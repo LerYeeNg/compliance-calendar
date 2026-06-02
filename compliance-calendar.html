@@ -343,8 +343,8 @@ tr.row-urgent:hover td{background:#ffefd4}
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group">
-          <label>Task No *</label>
-          <input type="text" id="aTaskNo" placeholder="e.g. 104">
+          <label>Task No</label>
+          <input type="text" id="aTaskNo" readonly style="background:#f4f6fa;color:var(--muted);cursor:default" title="Auto-filled from existing list">
         </div>
         <div class="form-group">
           <label>Entity</label>
@@ -366,6 +366,23 @@ tr.row-urgent:hover td{background:#ffefd4}
             <option>Annually</option>
             <option>Ad hoc</option>
           </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Obligation Due Date by Month</label>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px 8px;padding:8px 10px;background:#f4f6fa;border:1px solid var(--border);border-radius:6px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="0"> Jan</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="1"> Feb</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="2"> Mar</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="3"> Apr</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="4"> May</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="5"> Jun</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="6"> Jul</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="7"> Aug</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="8"> Sep</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="9"> Oct</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="10"> Nov</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:400;cursor:pointer"><input type="checkbox" class="month-cb" data-m="11"> Dec</label>
         </div>
       </div>
       <div class="form-group">
@@ -596,13 +613,20 @@ async function spPost(fields) {
 
 // ── ADD OBLIGATION ──────────────────────────────────────
 function openAdd() {
-  // Clear all fields
-  ['aTaskNo','aEntity','aSection','aReference','aOfficer','aCompletionDate','aReviewDate','aComments'].forEach(id => {
+  // Auto-fill Task No as max existing + 1
+  const maxNo = allItems.reduce((mx, r) => {
+    const n = parseInt(r.taskNo); return !isNaN(n) && n > mx ? n : mx;
+  }, 0);
+  document.getElementById('aTaskNo').value = maxNo ? String(maxNo + 1) : '1';
+
+  // Clear all other fields
+  ['aEntity','aSection','aReference','aOfficer','aCompletionDate','aReviewDate','aComments'].forEach(id => {
     document.getElementById(id).value = '';
   });
   ['aObligation','aAction'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('aFrequency').value = '';
   document.getElementById('aCompleted').value = '';
+  document.querySelectorAll('.month-cb').forEach(cb => cb.checked = false);
   document.getElementById('addModalOverlay').classList.remove('hidden');
 }
 
@@ -623,6 +647,12 @@ async function saveNewItem() {
   const compDateVal   = document.getElementById('aCompletionDate').value;
   const reviewDateVal = document.getElementById('aReviewDate').value;
 
+  // Build month fields — checked months get 'Yes', unchecked get null
+  const monthFields = {};
+  document.querySelectorAll('.month-cb').forEach(cb => {
+    monthFields[f.months[parseInt(cb.dataset.m)]] = cb.checked ? 'Yes' : null;
+  });
+
   try {
     const newItem = await spPost({
       [f.taskNo]:         taskNo,
@@ -637,6 +667,7 @@ async function saveNewItem() {
       [f.completionDate]: compDateVal   ? compDateVal   + 'T00:00:00Z' : null,
       [f.reviewDate]:     reviewDateVal ? reviewDateVal + 'T00:00:00Z' : null,
       [f.comments]:       document.getElementById('aComments').value.trim()     || null,
+      ...monthFields,
     });
     toast('success', 'Task #' + taskNo + ' added to SharePoint ✓');
     closeAddModal();

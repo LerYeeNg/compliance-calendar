@@ -27,6 +27,8 @@ const CONFIG = {
     action:         'field_5',            // "COMPLIANCE ACTION"
     officer:        'field_6',            // "RESPONSIBLE OFFICER"
     frequency:      'field_7',            // "FREQUENCY"
+    months: ['field_8','field_9','field_10','field_11','field_12','field_13',
+             'field_14','field_15','field_16','field_17','field_18','field_19'], // JAN–DEC
     completed:      'field_20',           // "COMPLETED"
     completionDate: 'field_21',           // "COMPLETION DATE"
     reviewDate:     'UpcomingReviewDate', // "UPCOMING REVIEW DATE"
