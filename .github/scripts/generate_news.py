@@ -150,9 +150,12 @@ Rules:
 
     print("Raw response (first 400 chars):", raw[:400])
 
-    # Strip any accidental markdown fences
-    raw = re.sub(r'^```(?:json)?\s*', '', raw)
-    raw = re.sub(r'\s*```$', '', raw)
+    # Extract JSON object — find first { and last } in case Claude adds prose around it
+    start = raw.find('{')
+    end   = raw.rfind('}')
+    if start == -1 or end == -1:
+        raise ValueError('No JSON object found in Claude response')
+    raw = raw[start:end+1]
 
     news = json.loads(raw)  # Raises if invalid — causes the Action to fail visibly
 
@@ -172,7 +175,7 @@ Rules:
         f.write('\n')
 
     total = sum(len(s.get('items', [])) for s in news.get('sections', []))
-    print(f"✓ news.json written — {len(news.get('sections', []))} sections, {total} items.")
+    print(f"OK news.json written — {len(news.get('sections', []))} sections, {total} items.")
 
 if __name__ == '__main__':
     main()
