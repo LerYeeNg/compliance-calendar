@@ -814,8 +814,12 @@ async function loadData() {
 }
 
 // ── EDIT & SAVE ────────────────────────────────────────
-function openEdit(encoded) {
-  editingItem = JSON.parse(decodeURIComponent(encoded));
+// Lookup map: SharePoint ID → item object (avoids encoding large objects in onclick HTML)
+const _itemMap = {};
+
+function openEdit(spId) {
+  editingItem = _itemMap[spId];
+  if (!editingItem) return;
   document.getElementById('modalTitle').textContent = 'Task #' + editingItem.taskNo + ' – ' + editingItem.section;
   // Identity
   document.getElementById('mTaskNo').value        = editingItem.taskNo      || '';
@@ -1025,10 +1029,10 @@ function renderTable() {
                     : isYes && dc === 'date-overdue' ? ' row-overdue'
                     : isYes && dc === 'date-urgent'  ? ' row-urgent'
                     : '';
-    const enc = encodeURIComponent(JSON.stringify(r));
+    _itemMap[r._id] = r;
     const sTag = 'tag-' + (r.section||'').replace(/[\s\/]/g,'-').replace(/[()]/g,'');
     const fTag = 'freq-' + (r.frequency||'').split(' ')[0];
-    return '<tr class="clickable' + rowCls + '" onclick="openEdit(\'' + enc + '\')">'
+    return '<tr class="clickable' + rowCls + '" onclick="openEdit(' + r._id + ')">'
       + '<td style="font-weight:700;color:var(--muted);white-space:nowrap">' + (r.taskNo||'—') + '</td>'
       + '<td><span class="tag ' + sTag + '">' + (r.section||'—') + '</span></td>'
       + '<td>' + (r.obligation||'—') + '</td>'
