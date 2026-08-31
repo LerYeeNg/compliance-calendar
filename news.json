@@ -1,5 +1,5 @@
 {
-  "updated": "August 2026",
+  "updated": "September 2026",
   "sections": [
     {
       "id": "afsl",
@@ -7,28 +7,33 @@
       "items": [
         {
           "badge": "deadline",
-          "title": "IDR Data Reporting – Due 31 Aug 2026",
-          "desc": "Submit Internal Dispute Resolution data for Jan–Jun 2026 via ASIC Regulatory Portal by 31 August 2026. Updated handbook includes changes for BNPL, digital assets and mutual risk products."
+          "title": "Digital Asset AFSL No-Action Deadline – 30 Sep 2026",
+          "desc": "ASIC extended its no-action position for digital asset businesses to 30 September 2026. Firms must lodge an AFSL application, obtain a variation, or enter an authorised representative arrangement by this date or risk breaching financial services laws."
         },
         {
           "badge": "deadline",
-          "title": "FS70 / FS71 Lodgement – Due 31 Oct 2026",
-          "desc": "Annual financial statements and audit report must be lodged within 4 months of 30 June FY close. Engage auditor now. (CA 989A–D, AFSL Condition)"
+          "title": "Employee Entitlement Schemes – AFSL Required from 1 Sep 2026",
+          "desc": "Operators of employee entitlement schemes must hold an AFS licence from 1 September 2026. ASIC ended 25 years of regulatory relief in this area — unlicensed operators face enforcement action."
         },
         {
-          "badge": "change",
-          "title": "Digital Asset AFSL – No-Action Period Expired 30 Jun 2026",
-          "desc": "ASIC's no-action position for digital asset businesses expired 30 June 2026. Firms providing financial services involving digital asset products without an AFSL now risk breaching financial services laws."
+          "badge": "deadline",
+          "title": "FS70 / FS71 – Disclosing Entities Due 30 Sep 2026",
+          "desc": "AFS licensees that are disclosing entities must lodge FS70/71 (profit & loss, balance sheet, auditor's report) by 30 September 2026. All other entities have until 31 October 2026."
+        },
+        {
+          "badge": "deadline",
+          "title": "Annual Financial Report (Ch 2M) – Due 30 Sep 2026",
+          "desc": "Annual financial report, directors' report and auditor's report must be lodged with ASIC by 30 September 2026 (Chapter 2M, Corporations Act). Non-disclosing entities have until 31 October."
+        },
+        {
+          "badge": "deadline",
+          "title": "Derivative Client Money Report – Due 31 Oct 2026",
+          "desc": "AFSL holders with derivative retail client money must lodge the annual client money data report with ASIC by 31 October 2026."
         },
         {
           "badge": "new",
-          "title": "Digital Assets Framework – AFSL Applications Open from Apr 2027",
-          "desc": "Corporations Amendment (Digital Assets Framework) Act 2026 passed. DAP and TCP operators can lodge AFSL applications from April 2027. Full compliance required by October 2027."
-        },
-        {
-          "badge": "watch",
-          "title": "ASIC 2026 Enforcement Priorities – Private Credit & Reporting",
-          "desc": "ASIC doubled investigations and court proceedings. Focus on private credit practices, financial reporting misconduct, insurance claims handling, and misleading pricing. Review internal practices."
+          "title": "Digital Assets Framework – AFSL Applications Open Apr 2027",
+          "desc": "Corporations Amendment (Digital Assets Framework) Act 2026 passed. DAP and TCP operators can lodge AFSL applications from April 2027 with full compliance required by October 2027. ASIC released an 18-month roadmap."
         }
       ]
     },
@@ -37,60 +42,60 @@
       "title": "AUSTRAC – AML/CTF Reforms",
       "items": [
         {
-          "badge": "deadline",
-          "title": "Tranche 2 Compliance Officer Notification – 12 Aug 2026",
-          "desc": "Newly regulated Tranche 2 entities that enrolled by 29 Jul 2026 must notify AUSTRAC of their AML/CTF Compliance Officer by 12 August 2026 (14 days after enrolment deadline)."
+          "badge": "change",
+          "title": "Annual Compliance Report – New FY Deadline from 2027",
+          "desc": "AUSTRAC has moved annual compliance reports to a financial year basis. No report is required for Jan–Jun 2026. The first report under the new cycle is due 30 September 2027 for FY2026–27."
+        },
+        {
+          "badge": "change",
+          "title": "Tranche 2 Entities – Compliance Obligations Now in Effect",
+          "desc": "Lawyers, accountants, real estate professionals and jewellers newly regulated from 1 July 2026. Must have an AML/CTF program, compliance officer, and staff training in place. AUSTRAC enforcement begins."
         },
         {
           "badge": "new",
           "title": "New TTR and SMR Reporting Forms – Live from 1 Jul 2026",
-          "desc": "AUSTRAC's new threshold transaction report and suspicious matter report forms are now available. Existing entities can transition anytime; old forms remain valid until 30 March 2029."
-        },
-        {
-          "badge": "change",
-          "title": "Unified AML/CTF Program – Now In Effect",
-          "desc": "Reformed AML/CTF Act in force since 31 March 2026. All reporting entities must operate unified, outcomes-focused programs replacing the old Part A/Part B structure. Ongoing CDD applies."
+          "desc": "Updated threshold transaction report and suspicious matter report forms now available. Existing entities may continue using old forms until 30 March 2029 — transition at your own pace."
         },
         {
           "badge": "watch",
-          "title": "AUSTRAC Risk Snapshots – AI and Virtual Assets",
-          "desc": "AUSTRAC's May 2026 ML/TF/PF risk snapshots highlight growing AI and crypto threats. Ensure risk-based AML/CTF frameworks account for these emerging risks in your program."
+          "title": "AUSTRAC Independent Review Obligations – 12-Month Window",
+          "desc": "Entities with higher ML/TF risk must complete an independent review of their AML/CTF program within 12 months of the 31 March 2026 reform commencement. Review scope and timing should be confirmed now."
         },
         {
           "badge": "watch",
-          "title": "AML/CTF Amendment Bill 2026 – AUSTRAC Powers Expanding",
-          "desc": "New bill proposes powers for AUSTRAC CEO to restrict high-risk products and delivery channels (e.g. crypto ATMs). Monitor for passage and assess impact on fund operations."
+          "title": "AUSTRAC Guidance on 2026 AML/CTF Reforms Released",
+          "desc": "AUSTRAC and Minter Ellison have published practical guidance clarifying obligations under the reformed AML/CTF Act. Review updated guidance on customer due diligence, program structure, and record-keeping."
         }
       ]
     },
     {
       "id": "aer",
-      "title": "AER – Australian Energy Regulator (Upcoming)",
+      "title": "AER – Australian Energy Regulator",
       "items": [
         {
           "badge": "new",
-          "title": "Automated Bidding Compliance Bulletin – 5 Aug 2026",
-          "desc": "AER issued guidance on automated bidding and third-party bidding services in the NEM. Market participants must maintain oversight, conduct due diligence on providers and retain contingency plans."
+          "title": "AER 2026–27 Compliance & Enforcement Priorities Released",
+          "desc": "AER published its 2026–27 priorities: vulnerable consumer outcomes, smart meter rollout protection, power system security, competition and network safety, and Part 10 National Gas Rules reporting compliance."
         },
         {
           "badge": "deadline",
-          "title": "Half-Yearly Breach Reports – Due 31 Aug 2026",
-          "desc": "AER-regulated entities must submit compliance and breach reports by 31 August 2026 covering the first half of 2026. Collate H1 data and submit via AER portal."
-        },
-        {
-          "badge": "watch",
-          "title": "Rate of Return Instrument Review – Final Dec 2026",
-          "desc": "AER's 2026 RORI review underway. Final decision expected December 2026. Will set allowed returns on capital for regulated electricity and gas networks for the next regulatory cycle."
+          "title": "Retailer Authorisation Consultation – Closes 21 Sep 2026",
+          "desc": "AER published Yurringa Energy's application for electricity retailer authorisation. Public consultation closes Monday 21 September 2026. Existing retailers should monitor new entrant activity."
         },
         {
           "badge": "change",
-          "title": "AER 2025-26 Compliance & Enforcement Report Released",
-          "desc": "AER published its latest compliance and enforcement activities report. Review findings relevant to any portfolio companies with energy retail authorisations or network connections."
+          "title": "Minimum Disconnection Amount Raised – Effective 1 Jul 2026",
+          "desc": "AER increased the minimum amount owed before a retailer may disconnect a customer under NECF from $300 to $500, effective 1 July 2026. Review disconnection procedures and system thresholds."
+        },
+        {
+          "badge": "new",
+          "title": "AER 2025–26 Compliance & Enforcement Annual Report Released",
+          "desc": "AER released its annual report covering 2025–26 enforcement activities. Review findings relevant to portfolio companies with energy retail authorisations or network connections."
         },
         {
           "badge": "watch",
-          "title": "Exemptions Guidelines 2026 Review – Consultation Ongoing",
-          "desc": "AER's review of the Exemptions Guidelines to align with flexible trading reforms is ongoing. Proposes reduced regulatory burden for commercial embedded network retrofits."
+          "title": "Rate of Return Instrument Review – Final Decision Dec 2026",
+          "desc": "AER's 2026 RORI review is ongoing. Final decision expected December 2026, setting allowed returns on capital for regulated electricity and gas networks for the next regulatory cycle."
         }
       ]
     }
